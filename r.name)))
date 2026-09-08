@@ -1,0 +1,14 @@
+/tmp/check.js:1
+const sqlite3 = require('sqlite3'); const db = new sqlite3.Database('/app/data/database.sqlite'); db.all('PRAGMA table_info(vault_credentials)', (err, rows) = console.log(JSON.stringify(rows.map(r =; db.close(); });
+                                                                                                                                                 ^^^^^^^^^^^
+
+SyntaxError: Invalid left-hand side in assignment
+[90m    at wrapSafe (node:internal/modules/cjs/loader:1464:18)[39m
+[90m    at Module._compile (node:internal/modules/cjs/loader:1495:20)[39m
+[90m    at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)[39m
+[90m    at Module.load (node:internal/modules/cjs/loader:1266:32)[39m
+[90m    at Module._load (node:internal/modules/cjs/loader:1091:12)[39m
+[90m    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:164:12)[39m
+[90m    at node:internal/main/run_main_module:28:49[39m
+
+Node.js v20.20.2

@@ -1,0 +1,709 @@
+import { useState, useEffect } from 'react';
+import { 
+  Plus, CheckCircle, Circle, Clock, Calendar, Edit, Trash2, 
+  Eye, X, Save, AlertCircle, Check, ChevronRight, ChevronDown,
+  Server, Mail, DollarSign, Camera, Monitor, Wifi, HardDrive,
+  User, Phone, MapPin, Flag, Star, Target, Zap, Repeat,
+  Calendar as CalendarIcon, Clock as ClockIcon, Filter, Search,
+  Settings, MoreVertical, Play, Pause, RotateCcw, Send, MessageSquare,
+  TrendingUp, Award, BarChart3, PieChart, Download, Upload,
+  Image, Paperclip, Link, Bell, BellRing, Moon, Sun,
+  Trophy, Medal, Gem, Sparkles, Layers, GitBranch, History,
+  Trash, Folder, Archive, RefreshCw, Sliders, Tag, Tags,
+  Wrench, ArrowUpDown, LogIn, Code, Menu, Rocket, Fire, 
+  Activity, Shield, Users, Gift, Coffee, Heart
+} from 'lucide-react';
+import AlertModal from '../components/common/AlertModal';
+import ConfirmModal from '../components/common/ConfirmModal';
+import DashboardMetrics from '../components/tasks/DashboardMetrics';
+import TaskCalendar from '../components/tasks/TaskCalendar';
+import TemplateManager from '../components/tasks/TemplateManager';
+import AttachmentUploader from '../components/tasks/AttachmentUploader';
+import SubtaskList from '../components/tasks/SubtaskList';
+import GamificationBadges from '../components/tasks/GamificationBadges';
+import NotificationToast from '../components/common/NotificationToast';
+import TelegramNotifier from '../components/common/TelegramNotifier';
+
+// ============================================
+// CONFIGURACIÓN DE PRIORIDADES
+// ============================================
+
+const PRIORITIES = {
+  mandatory: { label: 'Obligatoria', color: '#dc2626', bg: '#fef2f2', text: '#dc2626', icon: Fire, points: 10 },
+  standard: { label: 'Estándar', color: '#f59e0b', bg: '#fffbeb', text: '#d97706', icon: Flag, points: 5 },
+  not_urgent: { label: 'No urgente', color: '#10b981', bg: '#ecfdf5', text: '#059669', icon: Coffee, points: 2 }
+};
+
+// ============================================
+// DATOS DE EJEMPLO
+// ============================================
+
+const SAMPLE_RECURRING_TASKS = [
+  {
+    id: 1, title: '🖥️ Verificar estado del servidor principal',
+    description: 'Revisar logs, temperatura y rendimiento del servidor',
+    category: 'server', priority: 'mandatory', frequency: 'daily',
+    hour: '08:00', specificDays: [], enabled: true,
+    subtasks: [
+      { id: 's1', title: 'Verificar logs del sistema', completed: false },
+      { id: 's2', title: 'Revisar temperatura CPU', completed: false },
+      { id: 's3', title: 'Chequear espacio en disco', completed: false }
+    ],
+    history: [
+      { date: '2024-06-07', completed: false, note: '', completedAt: null, pointsEarned: 0 },
+      { date: '2024-06-06', completed: true, note: 'Todo correcto', completedAt: '08:15', pointsEarned: 10 }
+    ]
+  },
+  {
+    id: 2, title: '💰 Enviar anulaciones de cashea',
+    description: 'Procesar y enviar anulaciones del día al sistema administrativo',
+    category: 'cashea', priority: 'mandatory', frequency: 'daily',
+    hour: '18:00', specificDays: [], enabled: true,
+    history: [
+      { date: '2024-06-07', completed: false, note: '', completedAt: null, pointsEarned: 0 },
+      { date: '2024-06-06', completed: true, note: '3 anulaciones procesadas', completedAt: '18:20', pointsEarned: 10 }
+    ]
+  },
+  {
+    id: 3, title: '📧 Enviar promociones por correo',
+    description: 'Newsletter semanal con promociones',
+    category: 'promotions', priority: 'mandatory', frequency: 'weekly',
+    hour: '10:00', specificDays: ['monday'], enabled: true,
+    history: [
+      { date: '2024-06-03', completed: true, note: 'Promociones enviadas a 500 clientes', completedAt: '10:30', pointsEarned: 10 }
+    ]
+  }
+];
+
+const SAMPLE_TICKETS = [
+  {
+    id: 101, title: '📹 Cámara pasillo 3 - Imagen borrosa',
+    description: 'La cámara muestra imagen borrosa desde esta mañana',
+    category: 'cameras', priority: 'standard',
+    requestedBy: 'Carlos Pérez', department: 'Seguridad',
+    requestedAt: '2024-06-07T10:30:00', status: 'pending',
+    attachments: [], tags: ['urgente', 'seguimiento'],
+    incident: { date: '2024-06-07', time: '10:25', description: 'Imagen borrosa', note: 'Posible problema de enfoque' }
+  },
+  {
+    id: 102, title: '💻 Caja 5 - Lentitud extrema',
+    description: 'El sistema tarda más de 30 segundos en responder',
+    category: 'pos', priority: 'urgent',
+    requestedBy: 'María López', department: 'Cajas',
+    requestedAt: '2024-06-07T09:15:00', status: 'in_progress',
+    attachments: [], tags: ['crítico', 'rendimiento'],
+    incident: { date: '2024-06-07', time: '09:00', description: 'Lentitud en procesamiento', note: 'Revisar memoria RAM' }
+  }
+];
+
+// ============================================
+// COMPONENTE PRINCIPAL MEJORADO
+// ============================================
+
+export default function TasksPage() {
+  const [recurringTasks, setRecurringTasks] = useState(SAMPLE_RECURRING_TASKS);
+  const [tickets, setTickets] = useState(SAMPLE_TICKETS);
+  const [templates, setTemplates] = useState([]);
+  const [maintenanceLogs, setMaintenanceLogs] = useState([]);
+  const [deletedTickets, setDeletedTickets] = useState([]);
+  const [userPoints, setUserPoints] = useState(255);
+  const [achievements, setAchievements] = useState([
+    { id: 'first_ticket', name: 'Primer Ticket', description: 'Creaste tu primer ticket', icon: Trophy, points: 10 }
+  ]);
+  const [notifications, setNotifications] = useState([]);
+  const [activeTab, setActiveTab] = useState('dashboard');
+  const [showAlert, setShowAlert] = useState({ show: false, title: '', message: '', type: 'success' });
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showTemplateModal, setShowTemplateModal] = useState(false);
+  const [showAttachmentModal, setShowAttachmentModal] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [telegramConnected, setTelegramConnected] = useState(false);
+  const [currentTicketId, setCurrentTicketId] = useState(null);
+
+  // Calcular estadísticas del día
+  const today = new Date().toISOString().split('T')[0];
+  const todayTasks = recurringTasks.filter(task => {
+    const todayHistory = task.history?.find(h => h.date === today);
+    return !todayHistory?.completed;
+  });
+  const completedToday = recurringTasks.filter(task => {
+    const todayHistory = task.history?.find(h => h.date === today);
+    return todayHistory?.completed;
+  });
+  const pendingTickets = tickets.filter(t => t.status !== 'completed');
+  const slaAdherence = recurringTasks.length ? Math.round((completedToday.length / recurringTasks.length) * 100) : 100;
+  
+  const stats = {
+    todayTasks: todayTasks.length,
+    completedToday: completedToday.length,
+    pendingTickets: pendingTickets.length,
+    slaAdherence,
+    avgResolutionTime: '2.4',
+    totalTickets: tickets.length,
+    userPoints,
+    achievementsCount: achievements.length
+  };
+
+  const handleCompleteTask = (task) => {
+    const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    setRecurringTasks(prev => prev.map(t => {
+      if (t.id === task.id) {
+        const newHistory = [...(t.history || [])];
+        const existingIndex = newHistory.findIndex(h => h.date === today);
+        const pointsEarned = PRIORITIES[t.priority]?.points || 5;
+        setUserPoints(prevPoints => prevPoints + pointsEarned);
+        
+        const newRecord = { date: today, completed: true, note: '', completedAt: now, pointsEarned };
+        if (existingIndex >= 0) newHistory[existingIndex] = newRecord;
+        else newHistory.unshift(newRecord);
+        return { ...t, history: newHistory };
+      }
+      return t;
+    }));
+    setShowAlert({ show: true, title: '🎉 ¡Completada!', message: `+${PRIORITIES[task.priority]?.points || 5} puntos`, type: 'success' });
+  };
+
+  const handleCompleteTicket = (ticket) => {
+    setTickets(prev => prev.map(t => t.id === ticket.id ? { ...t, status: 'completed', completedAt: new Date().toISOString() } : t));
+    setUserPoints(prev => prev + 5);
+    setShowAlert({ show: true, title: '✅ Ticket completado', message: `+5 puntos`, type: 'success' });
+  };
+
+  const handleAddAttachment = (ticketId, file) => {
+    setTickets(prev => prev.map(t => t.id === ticketId ? { ...t, attachments: [...(t.attachments || []), { id: Date.now(), name: file.name, url: URL.createObjectURL(file) }] } : t));
+    setShowAlert({ show: true, title: '📎 Archivo adjunto', message: `Se adjuntó ${file.name}`, type: 'success' });
+  };
+
+  const handleSoftDeleteTicket = (ticket) => {
+    setTickets(prev => prev.filter(t => t.id !== ticket.id));
+    setDeletedTickets(prev => [...prev, { ...ticket, deletedAt: new Date().toISOString() }]);
+    setShowAlert({ show: true, title: '🗑️ Movido a papelera', message: `Ticket ${ticket.id} movido a papelera`, type: 'info' });
+  };
+
+  const handleRestoreTicket = (ticket) => {
+    setDeletedTickets(prev => prev.filter(t => t.id !== ticket.id));
+    setTickets(prev => [...prev, { ...ticket, deleted: false, deletedAt: null }]);
+    setShowAlert({ show: true, title: '🔄 Ticket restaurado', message: `Ticket ${ticket.id} restaurado`, type: 'success' });
+  };
+
+  return (
+    <div className={`min-h-screen transition-all duration-300 ${isDarkMode ? 'bg-gray-900' : 'bg-gradient-to-br from-gray-50 to-gray-100'}`}>
+      
+      {/* Notificaciones */}
+      <NotificationToast notifications={notifications} onDismiss={(id) => setNotifications(prev => prev.filter(n => n.id !== id))} />
+      
+      {/* Header Mejorado */}
+      <div className={`sticky top-0 z-20 shadow-lg ${isDarkMode ? 'bg-gray-800/95 backdrop-blur-sm border-gray-700' : 'bg-white/95 backdrop-blur-sm border-gray-100'} border-b`}>
+        <div className="p-6">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl shadow-lg">
+                <Target className="w-8 h-8 text-white" />
+              </div>
+              <div>
+                <h1 className={`text-3xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+                  Centro de Mando Personal IT
+                </h1>
+                <p className={`text-sm mt-1 flex items-center gap-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                  <Activity size={12} className="text-green-500 animate-pulse" />
+                  Sistema activo · Última sincronización: hoy {new Date().toLocaleTimeString()}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              {/* Tarjeta de puntos flotante */}
+              <div className={`flex items-center gap-3 px-4 py-2 rounded-full shadow-md ${isDarkMode ? 'bg-gray-700' : 'bg-gradient-to-r from-yellow-50 to-amber-50 border border-yellow-200'}`}>
+                <div className="p-1.5 bg-yellow-500 rounded-full">
+                  <Sparkles size={16} className="text-white" />
+                </div>
+                <div>
+                  <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Tus puntos</p>
+                  <p className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>{userPoints}</p>
+                </div>
+              </div>
+              
+              {/* Botón modo oscuro */}
+              <button onClick={() => setIsDarkMode(!isDarkMode)} className={`p-2.5 rounded-xl transition-all hover:scale-105 ${isDarkMode ? 'bg-gray-700 text-yellow-400' : 'bg-gray-100 text-gray-600'}`}>
+                {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
+              </button>
+              
+              {/* Telegram */}
+              <TelegramNotifier isConnected={telegramConnected} onConnect={() => setTelegramConnected(true)} />
+            </div>
+          </div>
+          
+          {/* Tabs mejorados */}
+          <div className="flex gap-2 mt-6">
+            {[
+              { id: 'dashboard', label: '📊 Dashboard', icon: BarChart3, color: 'from-indigo-500 to-purple-500' },
+              { id: 'tasks', label: '✅ Tareas', icon: CheckCircle, color: 'from-green-500 to-emerald-500' },
+              { id: 'tickets', label: '🎫 Tickets', icon: MessageSquare, color: 'from-blue-500 to-cyan-500' },
+              { id: 'calendar', label: '📅 Calendario', icon: CalendarIcon, color: 'from-orange-500 to-amber-500' },
+              { id: 'templates', label: '📋 Plantillas', icon: Layers, color: 'from-purple-500 to-pink-500' },
+              { id: 'maintenance', label: '🔧 Mantenimiento', icon: Wrench, color: 'from-slate-500 to-gray-500' },
+              { id: 'achievements', label: '🏆 Logros', icon: Trophy, color: 'from-yellow-500 to-amber-500' },
+              { id: 'trash', label: '🗑️ Papelera', icon: Trash, color: 'from-red-500 to-rose-500' }
+            ].map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`
+                  flex items-center gap-3 px-5 py-2.5 text-sm font-medium rounded-xl transition-all duration-200
+                  ${activeTab === tab.id 
+                    ? `bg-gradient-to-r ${tab.color} text-white shadow-lg scale-105` 
+                    : isDarkMode ? 'text-gray-400 hover:text-white hover:bg-gray-700' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                  }
+                `}
+              >
+                <tab.icon size={18} />
+                <span className="hidden sm:inline">{tab.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Contenido principal con padding aumentado */}
+      <div className="p-8">
+        
+        {/* ========== DASHBOARD ========== */}
+        {activeTab === 'dashboard' && (
+          <div className="space-y-8">
+            {/* Tarjetas de resumen ejecutivo */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="group relative overflow-hidden bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all hover:scale-105">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-500"></div>
+                <div className="relative">
+                  <div className="p-3 bg-white/20 rounded-xl w-fit mb-3">
+                    <CheckCircle size={28} className="text-white" />
+                  </div>
+                  <p className="text-white/80 text-sm">Tareas Completadas Hoy</p>
+                  <p className="text-white text-4xl font-bold mt-1">{stats.completedToday}</p>
+                  <p className="text-white/60 text-xs mt-2">de {stats.todayTasks} tareas</p>
+                  <div className="mt-3 h-1.5 bg-white/20 rounded-full overflow-hidden">
+                    <div className="h-full bg-white rounded-full transition-all" style={{ width: `${(stats.completedToday / (stats.todayTasks || 1)) * 100}%` }}></div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="group relative overflow-hidden bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all hover:scale-105">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-500"></div>
+                <div className="relative">
+                  <div className="p-3 bg-white/20 rounded-xl w-fit mb-3">
+                    <Shield size={28} className="text-white" />
+                  </div>
+                  <p className="text-white/80 text-sm">SLA Adherencia</p>
+                  <p className="text-white text-4xl font-bold mt-1">{stats.slaAdherence}%</p>
+                  <p className="text-white/60 text-xs mt-2">Meta: 95%</p>
+                  <div className="mt-3 h-1.5 bg-white/20 rounded-full overflow-hidden">
+                    <div className="h-full bg-white rounded-full transition-all" style={{ width: `${stats.slaAdherence}%` }}></div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="group relative overflow-hidden bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all hover:scale-105">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-500"></div>
+                <div className="relative">
+                  <div className="p-3 bg-white/20 rounded-xl w-fit mb-3">
+                    <Clock size={28} className="text-white" />
+                  </div>
+                  <p className="text-white/80 text-sm">Tiempo Medio Respuesta</p>
+                  <p className="text-white text-4xl font-bold mt-1">{stats.avgResolutionTime}h</p>
+                  <p className="text-white/60 text-xs mt-2">⚡ -15% vs semana pasada</p>
+                </div>
+              </div>
+
+              <div className="group relative overflow-hidden bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all hover:scale-105">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-500"></div>
+                <div className="relative">
+                  <div className="p-3 bg-white/20 rounded-xl w-fit mb-3">
+                    <Trophy size={28} className="text-white" />
+                  </div>
+                  <p className="text-white/80 text-sm">Puntos Acumulados</p>
+                  <p className="text-white text-4xl font-bold mt-1">{userPoints}</p>
+                  <p className="text-white/60 text-xs mt-2">🎯 Nivel {Math.floor(userPoints / 100) + 1}</p>
+                  <div className="mt-3 h-1.5 bg-white/20 rounded-full overflow-hidden">
+                    <div className="h-full bg-yellow-400 rounded-full transition-all" style={{ width: `${(userPoints % 100)}%` }}></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Segunda fila de widgets */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className={`col-span-2 rounded-2xl p-6 shadow-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
+                <h3 className={`text-xl font-bold mb-4 flex items-center gap-2 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+                  <TrendingUp size={22} className="text-indigo-500" />
+                  Tendencia de Completado
+                </h3>
+                <div className="flex items-end gap-3 h-48">
+                  {['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'].map((day, i) => {
+                    const height = [60, 45, 80, 55, 90, 70, 40][i];
+                    return (
+                      <div key={day} className="flex-1 flex flex-col items-center gap-2">
+                        <div className="w-full bg-indigo-100 rounded-t-lg overflow-hidden" style={{ height: `${height}px` }}>
+                          <div className="w-full bg-gradient-to-t from-indigo-500 to-indigo-400" style={{ height: `${height}px` }}></div>
+                        </div>
+                        <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>{day}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className={`rounded-2xl p-6 shadow-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
+                <h3 className={`text-xl font-bold mb-4 flex items-center gap-2 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+                  <PieChart size={22} className="text-emerald-500" />
+                  Tickets por Categoría
+                </h3>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-blue-500"></div>Servidor</span>
+                    <span className="font-bold">2</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-emerald-500"></div>Cashea</span>
+                    <span className="font-bold">1</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-pink-500"></div>Cámaras</span>
+                    <span className="font-bold">3</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-orange-500"></div>Punto de Venta</span>
+                    <span className="font-bold">2</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Widget de próximas tareas */}
+            <div className={`rounded-2xl p-6 shadow-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
+              <h3 className={`text-xl font-bold mb-4 flex items-center gap-2 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+                <Clock size={22} className="text-amber-500" />
+                ⏰ Próximas Tareas
+              </h3>
+              <div className="space-y-3">
+                {recurringTasks.slice(0, 3).map(task => (
+                  <div key={task.id} className={`flex items-center justify-between p-4 rounded-xl ${isDarkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
+                    <div>
+                      <p className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>{task.title}</p>
+                      <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>{task.hour}</p>
+                    </div>
+                    <div className={`px-3 py-1 rounded-full text-xs font-medium ${PRIORITIES[task.priority].bg} ${PRIORITIES[task.priority].text}`}>
+                      {PRIORITIES[task.priority].label}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ========== TAREAS ========== */}
+        {activeTab === 'tasks' && (
+          <div className="space-y-6">
+            <div className={`rounded-2xl p-6 shadow-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
+              <div className="flex justify-between items-center mb-6">
+                <h2 className={`text-2xl font-bold flex items-center gap-3 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+                  <div className="p-2 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl">
+                    <CheckCircle size={22} className="text-white" />
+                  </div>
+                  Tareas de Hoy
+                </h2>
+                <span className={`px-4 py-2 rounded-full text-sm font-medium ${isDarkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-600'}`}>
+                  {stats.completedToday} de {stats.todayTasks} completadas
+                </span>
+              </div>
+              
+              <div className="space-y-4">
+                {recurringTasks.filter(t => t.enabled).map(task => {
+                  const todayHistory = task.history?.find(h => h.date === today);
+                  const isCompleted = todayHistory?.completed;
+                  const priority = PRIORITIES[task.priority];
+                  const PriorityIcon = priority.icon;
+                  
+                  return (
+                    <div key={task.id} className={`p-5 rounded-xl transition-all hover:shadow-md ${isCompleted ? (isDarkMode ? 'bg-gray-700/50' : 'bg-gray-50') : (isDarkMode ? 'bg-gray-700' : 'bg-white border border-gray-200')}`}>
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-start gap-4 flex-1">
+                          <div className={`p-2 rounded-xl ${priority.bg}`}>
+                            <PriorityIcon size={24} className={priority.text} />
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 flex-wrap">
+                              <h3 className={`text-lg font-semibold ${isCompleted ? 'line-through text-gray-400' : isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+                                {task.title}
+                              </h3>
+                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${priority.bg} ${priority.text}`}>
+                                {priority.label}
+                              </span>
+                              <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                                ⏰ {task.hour}
+                              </span>
+                            </div>
+                            <p className={`text-sm mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>{task.description}</p>
+                            
+                            {/* Subtareas */}
+                            {task.subtasks && (
+                              <div className="mt-3 space-y-1 pl-6">
+                                {task.subtasks.map(sub => (
+                                  <div key={sub.id} className="flex items-center gap-2">
+                                    <Circle size={14} className="text-gray-400" />
+                                    <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>{sub.title}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        {!isCompleted && (
+                          <button
+                            onClick={() => handleCompleteTask(task)}
+                            className="px-6 py-2.5 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-medium hover:shadow-lg transition-all hover:scale-105 flex items-center gap-2"
+                          >
+                            <Check size={18} /> Completar
+                          </button>
+                        )}
+                        {isCompleted && (
+                          <div className="px-4 py-2 bg-green-100 text-green-700 rounded-xl flex items-center gap-2">
+                            <CheckCircle size={18} /> Completada
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ========== TICKETS ========== */}
+        {activeTab === 'tickets' && (
+          <div className={`rounded-2xl p-6 shadow-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
+            <div className="flex justify-between items-center mb-6">
+              <h2 className={`text-2xl font-bold flex items-center gap-3 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+                <div className="p-2 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl">
+                  <MessageSquare size={22} className="text-white" />
+                </div>
+                Tickets Activos
+              </h2>
+              <div className="flex gap-3">
+                <div className="relative">
+                  <Search size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Buscar tickets..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className={`pl-10 pr-4 py-2.5 text-sm rounded-xl border focus:outline-none focus:ring-2 focus:ring-indigo-500 w-64 ${isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-200'}`}
+                  />
+                </div>
+                <button onClick={() => setShowTemplateModal(true)} className={`p-2.5 rounded-xl ${isDarkMode ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-100 hover:bg-gray-200'}`}>
+                  <Layers size={20} />
+                </button>
+              </div>
+            </div>
+            
+            <div className="space-y-4">
+              {tickets.filter(t => t.title.toLowerCase().includes(searchTerm.toLowerCase())).map(ticket => (
+                <div key={ticket.id} className={`p-5 rounded-xl transition-all hover:shadow-md ${isDarkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 flex-wrap">
+                        <span className={`text-sm font-mono ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>#{ticket.id}</span>
+                        <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>{ticket.title}</h3>
+                        {ticket.tags?.map(tag => (
+                          <span key={tag} className="px-2 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-700">
+                            #{tag}
+                          </span>
+                        ))}
+                      </div>
+                      <p className={`text-sm mt-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>{ticket.description}</p>
+                      <div className="flex items-center gap-4 mt-3 text-sm">
+                        <span className="flex items-center gap-1 text-gray-500"><User size={14} /> {ticket.requestedBy}</span>
+                        <span className="flex items-center gap-1 text-gray-500"><Clock size={14} /> {new Date(ticket.requestedAt).toLocaleString()}</span>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <button onClick={() => { setCurrentTicketId(ticket.id); setShowAttachmentModal(true); }} className="p-2 text-gray-500 hover:text-indigo-600 rounded-lg hover:bg-indigo-50">
+                        <Paperclip size={18} />
+                      </button>
+                      <button onClick={() => handleCompleteTicket(ticket)} className="px-4 py-2 bg-green-500 text-white rounded-lg text-sm hover:bg-green-600">
+                        Completar
+                      </button>
+                      <button onClick={() => handleSoftDeleteTicket(ticket)} className="p-2 text-gray-500 hover:text-red-600 rounded-lg hover:bg-red-50">
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
+                  </div>
+                  {ticket.attachments?.length > 0 && (
+                    <div className="mt-3 pt-3 border-t border-gray-200">
+                      <p className="text-xs text-gray-500 flex items-center gap-1"><Image size={12} /> {ticket.attachments.length} archivo(s) adjunto(s)</p>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ========== CALENDARIO ========== */}
+        {activeTab === 'calendar' && (
+          <TaskCalendar tasks={recurringTasks} tickets={tickets} onTaskClick={() => {}} isDarkMode={isDarkMode} />
+        )}
+
+        {/* ========== PLANTILLAS ========== */}
+        {activeTab === 'templates' && (
+          <div className={`rounded-2xl p-6 shadow-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
+            <h2 className={`text-2xl font-bold flex items-center gap-3 mb-6 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+              <div className="p-2 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl">
+                <Layers size={22} className="text-white" />
+              </div>
+              Plantillas de Tickets
+            </h2>
+            <button onClick={() => setShowTemplateModal(true)} className="mb-6 w-full p-4 border-2 border-dashed rounded-xl text-center text-indigo-600 font-medium hover:bg-indigo-50 transition-colors">
+              + Nueva Plantilla
+            </button>
+            {templates.length === 0 && (
+              <div className="text-center py-12 text-gray-400">
+                <Layers size={48} className="mx-auto mb-3 opacity-50" />
+                <p>No hay plantillas guardadas aún</p>
+                <p className="text-sm">Crea tu primera plantilla para agilizar tickets recurrentes</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ========== MANTENIMIENTO ========== */}
+        {activeTab === 'maintenance' && (
+          <div className={`rounded-2xl p-6 shadow-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
+            <h2 className={`text-2xl font-bold flex items-center gap-3 mb-6 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+              <div className="p-2 bg-gradient-to-r from-slate-500 to-gray-500 rounded-xl">
+                <Wrench size={22} className="text-white" />
+              </div>
+              Mantenimiento Preventivo
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {[
+                { equipment: 'Caja Principal', type: 'Limpieza', nextDue: '2024-07-01', isDue: false },
+                { equipment: 'Servidor', type: 'Pasta térmica', nextDue: '2024-06-15', isDue: true },
+                { equipment: 'Cámara Pasillo 3', type: 'Limpieza lente', nextDue: '2024-06-20', isDue: false },
+                { equipment: 'Switch Red', type: 'Revisión', nextDue: '2024-06-10', isDue: true }
+              ].map((item, idx) => (
+                <div key={idx} className={`p-4 rounded-xl ${item.isDue ? (isDarkMode ? 'bg-red-900/30 border border-red-800' : 'bg-red-50 border border-red-200') : (isDarkMode ? 'bg-gray-700' : 'bg-gray-50')}`}>
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <p className={`font-semibold text-lg ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>{item.equipment}</p>
+                      <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>{item.type}</p>
+                      <p className={`text-xs mt-1 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>Próximo: {item.nextDue}</p>
+                    </div>
+                    {item.isDue && <span className="px-3 py-1 bg-red-500 text-white rounded-full text-xs font-medium animate-pulse">¡Vencido!</span>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ========== LOGROS ========== */}
+        {activeTab === 'achievements' && (
+          <div className={`rounded-2xl p-6 shadow-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className={`text-2xl font-bold flex items-center gap-3 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+                <div className="p-2 bg-gradient-to-r from-yellow-500 to-amber-500 rounded-xl">
+                  <Trophy size={22} className="text-white" />
+                </div>
+                Logros y Gamificación
+              </h2>
+              <div className={`flex items-center gap-3 px-4 py-2 rounded-full ${isDarkMode ? 'bg-gray-700' : 'bg-indigo-50'}`}>
+                <Sparkles size={20} className="text-yellow-500" />
+                <span className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>{userPoints}</span>
+                <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>puntos</span>
+              </div>
+            </div>
+            
+            <div className="mb-8">
+              <div className="flex justify-between mb-2">
+                <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Progreso al siguiente nivel</span>
+                <span className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-700'}`}>{userPoints % 100}/100 pts</span>
+              </div>
+              <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
+                <div className="h-full bg-gradient-to-r from-yellow-400 to-amber-500 rounded-full transition-all" style={{ width: `${userPoints % 100}%` }}></div>
+              </div>
+              <p className={`text-sm mt-2 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>Nivel {Math.floor(userPoints / 100) + 1} → {Math.floor(userPoints / 100) + 2}</p>
+            </div>
+
+            <h3 className={`text-lg font-semibold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>🏅 Logros Desbloqueados</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {[
+                { name: 'Primer Ticket', description: 'Creaste tu primer ticket', icon: Trophy, points: 10, unlocked: true },
+                { name: 'Semana Perfecta', description: 'Completaste todas las tareas por 7 días', icon: Medal, points: 50, unlocked: false },
+                { name: 'Master Troubleshooter', description: 'Resolviste 100 tickets', icon: Target, points: 100, unlocked: false },
+                { name: 'SLA Hero', description: 'Mantuviste 95% SLA por un mes', icon: Shield, points: 75, unlocked: false }
+              ].map((ach, idx) => (
+                <div key={idx} className={`p-4 rounded-xl transition-all ${ach.unlocked ? (isDarkMode ? 'bg-indigo-900/30 border border-indigo-800' : 'bg-indigo-50 border border-indigo-200') : (isDarkMode ? 'bg-gray-700 opacity-60' : 'bg-gray-100 opacity-60')}`}>
+                  <div className="flex items-center gap-3">
+                    <div className={`p-2 rounded-xl ${ach.unlocked ? 'bg-yellow-500' : 'bg-gray-400'}`}>
+                      <ach.icon size={20} className="text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <p className={`font-semibold ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>{ach.name}</p>
+                      <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>{ach.description}</p>
+                    </div>
+                    <div className="text-right">
+                      <span className={`text-sm font-bold ${ach.unlocked ? 'text-yellow-500' : 'text-gray-400'}`}>+{ach.points}</span>
+                      {ach.unlocked && <CheckCircle size={16} className="text-green-500 mt-1" />}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ========== PAPELERA ========== */}
+        {activeTab === 'trash' && (
+          <div className={`rounded-2xl p-6 shadow-lg ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
+            <h2 className={`text-2xl font-bold flex items-center gap-3 mb-6 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
+              <div className="p-2 bg-gradient-to-r from-red-500 to-rose-500 rounded-xl">
+                <Trash size={22} className="text-white" />
+              </div>
+              Papelera de Tickets
+            </h2>
+            {deletedTickets.length === 0 ? (
+              <div className="text-center py-12 text-gray-400">
+                <Trash size={48} className="mx-auto mb-3 opacity-50" />
+                <p>La papelera está vacía</p>
+                <p className="text-sm">Los tickets eliminados aparecerán aquí</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {deletedTickets.map(ticket => (
+                  <div key={ticket.id} className={`p-4 rounded-xl flex justify-between items-center ${isDarkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
+                    <div>
+                      <p className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>{ticket.title}</p>
+                      <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Eliminado: {new Date(ticket.deletedAt).toLocaleDateString()}</p>
+                    </div>
+                    <button onClick={() => handleRestoreTicket(ticket)} className="px-4 py-2 bg-indigo-500 text-white rounded-lg text-sm hover:bg-indigo-600 flex items-center gap-2">
+                      <RefreshCw size={14} /> Restaurar
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Modales */}
+      <AlertModal isOpen={showAlert.show} onClose={() => setShowAlert({ ...showAlert, show: false })} title={showAlert.title} message={showAlert.message} type={showAlert.type} />
+      <ConfirmModal isOpen={showDeleteConfirm} onClose={() => setShowDeleteConfirm(false)} onConfirm={() => {}} title="Confirmar" message="¿Estás seguro?" confirmText="Eliminar" type="danger" />
+      
+      {showTemplateModal && <TemplateManager templates={templates} onUseTemplate={() => {}} onSaveTemplate={(t) => setTemplates([...templates, t])} isDarkMode={isDarkMode} onClose={() => setShowTemplateModal(false)} />}
+      {showAttachmentModal && <AttachmentUploader onUpload={(file) => { handleAddAttachment(currentTicketId, file); setShowAttachmentModal(false); }} isDarkMode={isDarkMode} onClose={() => setShowAttachmentModal(false)} />}
+    </div>
+  );
+}
