@@ -5,9 +5,11 @@ import { initDb } from './config/database.js';
 import authRoutes from './routes/authRoutes.js';
 import branchRoutes from './routes/branchRoutes.js';
 import taskRoutes from './routes/taskRoutes.js';
+import ticketRoutes from './routes/ticketRoutes.js';
 import hardwareRoutes from './routes/hardwareRoutes.js';
 import vaultRoutes from './routes/vaultRoutes.js';
 import exportRoutes from './routes/exportRoutes.js';
+import remoteAccessRoutes from './routes/remoteAccessRoutes.js';
 
 dotenv.config();
 
@@ -26,9 +28,11 @@ await initDb();
 app.use('/api/auth', authRoutes);
 app.use('/api/branches', branchRoutes);
 app.use('/api/tasks', taskRoutes);
+app.use('/api/tickets', ticketRoutes);
 app.use('/api/hardware', hardwareRoutes);
 app.use('/api/vault', vaultRoutes);
 app.use('/api/export', exportRoutes);
+app.use('/api/remote-access', remoteAccessRoutes);
 
 // Ruta de prueba
 app.get('/api/health', (req, res) => {

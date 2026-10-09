@@ -20,22 +20,22 @@ const DB_PATH = path.join(dataDir, 'database.sqlite');
 
 export async function openDb() {
   if (dbInstance) return dbInstance;
-  
+
   console.log('📂 Base de datos en:', DB_PATH);
-  
+
   dbInstance = await open({
     filename: DB_PATH,
     driver: sqlite3.Database
   });
-  
+
   return dbInstance;
 }
 
 export async function initDb() {
   const db = await openDb();
-  
+
   console.log('🔧 Inicializando base de datos...');
-  
+
   // Tabla de usuarios
   await db.exec(`
     CREATE TABLE IF NOT EXISTS users (
@@ -124,6 +124,28 @@ export async function initDb() {
       due_date DATE,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       resolved_at TIMESTAMP,
+      FOREIGN KEY (branch_id) REFERENCES branches(id),
+      FOREIGN KEY (assigned_to) REFERENCES users(id),
+      FOREIGN KEY (created_by) REFERENCES users(id)
+    )
+  `);
+
+  // Tabla de tickets
+  await db.exec(`
+    CREATE TABLE IF NOT EXISTS tickets (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title TEXT NOT NULL,
+      description TEXT,
+      status TEXT DEFAULT 'open',
+      priority TEXT DEFAULT 'medium',
+      category TEXT,
+      branch_id INTEGER,
+      assigned_to INTEGER,
+      created_by INTEGER,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      resolved_at TIMESTAMP,
+      deleted_at TIMESTAMP,
       FOREIGN KEY (branch_id) REFERENCES branches(id),
       FOREIGN KEY (assigned_to) REFERENCES users(id),
       FOREIGN KEY (created_by) REFERENCES users(id)
@@ -324,7 +346,10 @@ export async function initDb() {
   `);
 
   // Insertar categorías por defecto para la bóveda
-  const categoriesCount = await db.get('SELECT COUNT(*) as count FROM categories WHERE type = "vault"');
+  const categoriesCount = await db.get(
+    'SELECT COUNT(*) as count FROM categories WHERE type = "vault"'
+  );
+
   if (categoriesCount.count === 0) {
     const defaultCategories = [
       { name: 'Router ISP', type: 'vault' },
@@ -336,15 +361,22 @@ export async function initDb() {
       { name: 'TeamViewer', type: 'vault' },
       { name: 'Redes Sociales', type: 'vault' }
     ];
-    
+
     for (const cat of defaultCategories) {
-      await db.run('INSERT INTO categories (name, type) VALUES (?, ?)', [cat.name, cat.type]);
+      await db.run(
+        'INSERT INTO categories (name, type) VALUES (?, ?)',
+        [cat.name, cat.type]
+      );
     }
+
     console.log('✅ Categorías de bóveda creadas');
   }
 
   // Insertar categorías por defecto para snippets
-  const snippetCategoriesCount = await db.get('SELECT COUNT(*) as count FROM categories WHERE type = "snippet"');
+  const snippetCategoriesCount = await db.get(
+    'SELECT COUNT(*) as count FROM categories WHERE type = "snippet"'
+  );
+
   if (snippetCategoriesCount.count === 0) {
     const snippetCategories = [
       { name: 'SQL Queries', type: 'snippet' },
@@ -354,15 +386,22 @@ export async function initDb() {
       { name: 'Python Scripts', type: 'snippet' },
       { name: 'Bash Commands', type: 'snippet' }
     ];
-    
+
     for (const cat of snippetCategories) {
-      await db.run('INSERT INTO categories (name, type) VALUES (?, ?)', [cat.name, cat.type]);
+      await db.run(
+        'INSERT INTO categories (name, type) VALUES (?, ?)',
+        [cat.name, cat.type]
+      );
     }
+
     console.log('✅ Categorías de snippets creadas');
   }
 
   // Insertar tags por defecto
-  const tagsCount = await db.get('SELECT COUNT(*) as count FROM vault_tags');
+  const tagsCount = await db.get(
+    'SELECT COUNT(*) as count FROM vault_tags'
+  );
+
   if (tagsCount.count === 0) {
     const defaultTags = [
       { name: 'urgente', color: 'red' },
@@ -371,43 +410,86 @@ export async function initDb() {
       { name: 'crítico', color: 'orange' },
       { name: 'externo', color: 'green' }
     ];
-    
+
     for (const tag of defaultTags) {
-      await db.run('INSERT INTO vault_tags (name, color) VALUES (?, ?)', [tag.name, tag.color]);
+      await db.run(
+        'INSERT INTO vault_tags (name, color) VALUES (?, ?)',
+        [tag.name, tag.color]
+      );
     }
+
     console.log('✅ Tags por defecto creados');
   }
 
   // Crear usuario admin por defecto
-  const adminExists = await db.get('SELECT id FROM users WHERE username = ?', ['admin']);
+  const adminExists = await db.get(
+    'SELECT id FROM users WHERE username = ?',
+    ['admin']
+  );
+
   if (!adminExists) {
     const hashedPassword = await bcrypt.hash('admin123', 10);
+
     await db.run(`
-      INSERT INTO users (username, password_hash, full_name, email, role, is_active)
+      INSERT INTO users (
+        username,
+        password_hash,
+        full_name,
+        email,
+        role,
+        is_active
+      )
       VALUES (?, ?, ?, ?, ?, ?)
-    `, ['admin', hashedPassword, 'Administrador', 'admin@itsupport.com', 'admin', 1]);
+    `, [
+      'admin',
+      hashedPassword,
+      'Administrador',
+      'admin@itsupport.com',
+      'admin',
+      1
+    ]);
+
     console.log('✅ Usuario admin creado: admin / admin123');
   }
 
   // Agregar columnas faltantes a vault_credentials si no existen
-  const tableInfo = await db.all("PRAGMA table_info(vault_credentials)");
+  const tableInfo = await db.all(
+    "PRAGMA table_info(vault_credentials)"
+  );
+
   const columns = tableInfo.map(col => col.name);
-  
+
   if (!columns.includes('favorite')) {
-    await db.exec(`ALTER TABLE vault_credentials ADD COLUMN favorite BOOLEAN DEFAULT 0`);
+    await db.exec(`
+      ALTER TABLE vault_credentials
+      ADD COLUMN favorite BOOLEAN DEFAULT 0
+    `);
+
     console.log('✅ Columna favorite agregada');
   }
-  
+
   if (!columns.includes('usage_count')) {
-    await db.exec(`ALTER TABLE vault_credentials ADD COLUMN usage_count INTEGER DEFAULT 0`);
+    await db.exec(`
+      ALTER TABLE vault_credentials
+      ADD COLUMN usage_count INTEGER DEFAULT 0
+    `);
+
     console.log('✅ Columna usage_count agregada');
   }
-  
+
   if (!columns.includes('last_used')) {
-    await db.exec(`ALTER TABLE vault_credentials ADD COLUMN last_used TIMESTAMP`);
+    await db.exec(`
+      ALTER TABLE vault_credentials
+      ADD COLUMN last_used TIMESTAMP
+    `);
+
     console.log('✅ Columna last_used agregada');
   }
 
-  console.log('✅ Base de datos inicializada correctamente en:', DB_PATH);
+  console.log(
+    '✅ Base de datos inicializada correctamente en:',
+    DB_PATH
+  );
+
   return db;
 }
