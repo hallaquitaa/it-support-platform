@@ -12,6 +12,7 @@ import VaultPage from './pages/VaultPage';
 import taskService from './services/taskService';
 import { Bell, Clock, X } from 'lucide-react';
 import RemoteAccessPage from './pages/RemoteAccessPage';
+import ProfilePage from './pages/ProfilePage';
 
 const DUE_ALERT_DURATION = 5000;
 const DUE_CHECK_FALLBACK = 30000;
@@ -394,6 +395,14 @@ function App() {
   element={
     <ProtectedRouteWithNavbar>
       <RemoteAccessPage />
+      <Route
+  path="/profile"
+  element={
+    <ProtectedRouteWithNavbar>
+      <ProfilePage />
+    </ProtectedRouteWithNavbar>
+  }
+/>
     </ProtectedRouteWithNavbar>
   }
 />
