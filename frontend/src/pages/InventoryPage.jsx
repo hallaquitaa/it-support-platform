@@ -1,1115 +1,348 @@
-import { useState, useEffect } from 'react';
-import { 
-  Plus, Search, Server, Monitor, Laptop, Wifi, Printer, 
-  Edit, Trash2, Eye, Grid, List, Package, AlertCircle, CheckCircle, 
-  Wrench, Folder, FolderOpen, ChevronRight, ChevronDown, 
-  Cpu, HardDrive, Network, Smartphone, Tag, MapPin, Calendar,
-  Settings, Save, X, PlusCircle, Trash as TrashIcon,
-  Camera, Mic, Headphones, Watch, Battery, Truck, Home, Coffee,
-  ShoppingBag, Gift, Heart, Star, Zap, Cloud, Lock, Shield,
-  User, Users, Globe, Book, Video, Music, File, Image, MessageCircle
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  Activity, AlertCircle, ArrowDownUp, ArrowLeft, Battery, Box, Building2, CalendarDays,
+  Check, CheckCircle2, ChevronDown, ChevronRight, AlertTriangle, ClipboardList, Cpu,
+  Edit3, Eye, FileText, Filter, HardDrive, Laptop, List, Loader2, Monitor, Network,
+  Package, Plus, Printer, RefreshCw, Search, Server, ShieldCheck, SlidersHorizontal,
+  Trash2, Wifi, X, Zap, Grid2X2, MapPin, Hash, Wrench, CalendarClock, Tag,
+  Smartphone, Camera, Mic, Headphones, Watch, Truck, Home, Coffee, ShoppingBag,
+  Gift, Heart, Star, Cloud, Lock, Shield, User, Users, Globe, Book, Video, Music,
+  File, Image as ImageIcon, MessageCircle
 } from 'lucide-react';
 import hardwareService from '../services/hardwareService';
 import branchService from '../services/branchService';
 
-// Lista de iconos disponibles
-const AVAILABLE_ICONS = [
-  { name: 'Monitor', icon: Monitor },
-  { name: 'Laptop', icon: Laptop },
-  { name: 'Printer', icon: Printer },
-  { name: 'Server', icon: Server },
-  { name: 'Wifi', icon: Wifi },
-  { name: 'Smartphone', icon: Smartphone },
-  { name: 'Camera', icon: Camera },
-  { name: 'Mic', icon: Mic },
-  { name: 'Headphones', icon: Headphones },
-  { name: 'Watch', icon: Watch },
-  { name: 'Battery', icon: Battery },
-  { name: 'Truck', icon: Truck },
-  { name: 'Home', icon: Home },
-  { name: 'Coffee', icon: Coffee },
-  { name: 'ShoppingBag', icon: ShoppingBag },
-  { name: 'Gift', icon: Gift },
-  { name: 'Heart', icon: Heart },
-  { name: 'Star', icon: Star },
-  { name: 'Zap', icon: Zap },
-  { name: 'Cloud', icon: Cloud },
-  { name: 'Lock', icon: Lock },
-  { name: 'Shield', icon: Shield },
-  { name: 'User', icon: User },
-  { name: 'Users', icon: Users },
-  { name: 'Globe', icon: Globe },
-  { name: 'Book', icon: Book },
-  { name: 'Video', icon: Video },
-  { name: 'Music', icon: Music },
-  { name: 'File', icon: File },
-  { name: 'Image', icon: Image },
-  { name: 'MessageCircle', icon: MessageCircle },
-  { name: 'Cpu', icon: Cpu },
-  { name: 'HardDrive', icon: HardDrive },
-  { name: 'Network', icon: Network }
+const DEFAULT_CATEGORIES = [
+  { name: 'Fiscal Printer', icon: Printer, color: 'from-emerald-500 to-teal-400', bgColor: 'bg-emerald-500/10', borderColor: 'border-emerald-500/20', defaultSpecs: [{ key: 'connection', label: 'Conexión', type: 'select', options: ['USB', 'Ethernet', 'Serial', 'Wi-Fi'] }, { key: 'paper_width', label: 'Ancho de papel', type: 'select', options: ['57 mm', '80 mm'] }] },
+  { name: 'Desktop', icon: Monitor, color: 'from-blue-500 to-cyan-400', bgColor: 'bg-blue-500/10', borderColor: 'border-blue-500/20', defaultSpecs: [{ key: 'processor', label: 'Procesador', type: 'text' }, { key: 'ram', label: 'Memoria RAM', type: 'text' }, { key: 'storage', label: 'Almacenamiento', type: 'text' }, { key: 'operating_system', label: 'Sistema operativo', type: 'text' }] },
+  { name: 'Laptop', icon: Laptop, color: 'from-indigo-500 to-violet-400', bgColor: 'bg-indigo-500/10', borderColor: 'border-indigo-500/20', defaultSpecs: [{ key: 'processor', label: 'Procesador', type: 'text' }, { key: 'ram', label: 'Memoria RAM', type: 'text' }, { key: 'storage', label: 'Almacenamiento', type: 'text' }, { key: 'operating_system', label: 'Sistema operativo', type: 'text' }] },
+  { name: 'Server', icon: Server, color: 'from-violet-500 to-purple-400', bgColor: 'bg-violet-500/10', borderColor: 'border-violet-500/20', defaultSpecs: [{ key: 'processor', label: 'Procesador', type: 'text' }, { key: 'ram', label: 'Memoria RAM', type: 'text' }, { key: 'storage', label: 'Almacenamiento', type: 'text' }, { key: 'os', label: 'Sistema operativo', type: 'text' }] },
+  { name: 'Network Device', icon: Wifi, color: 'from-cyan-500 to-sky-400', bgColor: 'bg-cyan-500/10', borderColor: 'border-cyan-500/20', defaultSpecs: [{ key: 'ports', label: 'Puertos', type: 'text' }, { key: 'speed', label: 'Velocidad', type: 'text' }, { key: 'management_ip', label: 'IP de gestión', type: 'text' }] },
+  { name: 'POS', icon: Smartphone, color: 'from-amber-500 to-orange-400', bgColor: 'bg-amber-500/10', borderColor: 'border-amber-500/20', defaultSpecs: [{ key: 'connection', label: 'Conexión', type: 'select', options: ['Ethernet', 'Wi-Fi', 'USB'] }, { key: 'operating_system', label: 'Sistema operativo', type: 'text' }] },
 ];
 
-// Categorías predefinidas
-const DEFAULT_CATEGORIES = {
-  'Fiscal Printer': {
-    name: 'Impresoras Fiscales',
-    icon: 'Printer',
-    color: 'from-orange-500 to-red-500',
-    bgColor: 'bg-orange-50 dark:bg-orange-950/30',
-    borderColor: 'border-orange-200 dark:border-orange-800',
-    defaultSpecs: [
-      { key: 'brand', label: 'Marca', type: 'text', placeholder: 'Epson, Hasar, etc.' },
-      { key: 'model', label: 'Modelo', type: 'text', placeholder: 'TM-T88VI, Hasar 3000' },
-      { key: 'firmware', label: 'Versión Firmware', type: 'text', placeholder: 'v1.2.3' },
-      { key: 'port', label: 'Puerto', type: 'select', options: ['USB', 'Serial', 'Ethernet', 'Bluetooth'] },
-      { key: 'has_display', label: 'Tiene Display', type: 'boolean' },
-      { key: 'has_barcode', label: 'Lector Código de Barras', type: 'boolean' },
-      { key: 'paper_width', label: 'Ancho de Papel', type: 'text', placeholder: '80mm, 58mm' }
-    ]
-  },
-  'Desktop': {
-    name: 'Computadoras de Escritorio',
-    icon: 'Monitor',
-    color: 'from-blue-500 to-cyan-500',
-    bgColor: 'bg-blue-50 dark:bg-blue-950/30',
-    borderColor: 'border-blue-200 dark:border-blue-800',
-    defaultSpecs: [
-      { key: 'cpu', label: 'Procesador', type: 'text', placeholder: 'Intel Core i5-12400' },
-      { key: 'ram', label: 'Memoria RAM', type: 'text', placeholder: '16GB DDR4' },
-      { key: 'storage', label: 'Almacenamiento', type: 'text', placeholder: '512GB SSD' },
-      { key: 'os', label: 'Sistema Operativo', type: 'text', placeholder: 'Windows 11 Pro' }
-    ]
-  },
-  'Laptop': {
-    name: 'Laptops',
-    icon: 'Laptop',
-    color: 'from-green-500 to-teal-500',
-    bgColor: 'bg-green-50 dark:bg-green-950/30',
-    borderColor: 'border-green-200 dark:border-green-800',
-    defaultSpecs: [
-      { key: 'cpu', label: 'Procesador', type: 'text', placeholder: 'Intel Core i7-1355U' },
-      { key: 'ram', label: 'Memoria RAM', type: 'text', placeholder: '32GB DDR5' },
-      { key: 'storage', label: 'Almacenamiento', type: 'text', placeholder: '1TB SSD NVMe' },
-      { key: 'os', label: 'Sistema Operativo', type: 'text', placeholder: 'Windows 11 Pro' }
-    ]
-  },
-  'Server': {
-    name: 'Servidores',
-    icon: 'Server',
-    color: 'from-purple-500 to-indigo-500',
-    bgColor: 'bg-purple-50 dark:bg-purple-950/30',
-    borderColor: 'border-purple-200 dark:border-purple-800',
-    defaultSpecs: [
-      { key: 'cpu', label: 'Procesador', type: 'text', placeholder: 'Intel Xeon Gold' },
-      { key: 'ram', label: 'Memoria RAM', type: 'text', placeholder: '64GB ECC' },
-      { key: 'storage', label: 'Almacenamiento', type: 'text', placeholder: '2x 1TB SSD RAID 1' },
-      { key: 'os', label: 'Sistema Operativo', type: 'text', placeholder: 'Windows Server 2022' }
-    ]
-  },
-  'Network Device': {
-    name: 'Equipos de Red',
-    icon: 'Wifi',
-    color: 'from-cyan-500 to-blue-500',
-    bgColor: 'bg-cyan-50 dark:bg-cyan-950/30',
-    borderColor: 'border-cyan-200 dark:border-cyan-800',
-    defaultSpecs: [
-      { key: 'device_type', label: 'Tipo de Equipo', type: 'select', options: ['Router', 'Switch', 'Access Point', 'Firewall', 'Modem'] },
-      { key: 'firmware', label: 'Versión Firmware', type: 'text', placeholder: 'v1.0.0' },
-      { key: 'ports', label: 'Puertos', type: 'text', placeholder: '24 puertos Gigabit' }
-    ]
-  },
-  'POS': {
-    name: 'Puntos de Venta (POS)',
-    icon: 'Smartphone',
-    color: 'from-pink-500 to-rose-500',
-    bgColor: 'bg-pink-50 dark:bg-pink-950/30',
-    borderColor: 'border-pink-200 dark:border-pink-800',
-    defaultSpecs: [
-      { key: 'pos_software', label: 'Software POS', type: 'text', placeholder: 'SAP, POSCloud' },
-      { key: 'touchscreen', label: 'Pantalla Táctil', type: 'boolean' }
-    ]
+const AVAILABLE_ICONS = {
+  Monitor, Laptop, Printer, Server, Wifi, Smartphone, Camera, Mic, Headphones, Watch,
+  Battery, Truck, Home, Coffee, ShoppingBag, Gift, Heart, Star, Zap, Cloud, Lock,
+  Shield, User, Users, Globe, Book, Video, Music, File, Image: ImageIcon,
+  MessageCircle, Cpu, HardDrive, Network, Package, Box, Activity,
+};
+
+const CATEGORY_COLORS = [
+  { label: 'Esmeralda', value: 'from-emerald-500 to-teal-400', bgColor: 'bg-emerald-500/10', borderColor: 'border-emerald-500/20' },
+  { label: 'Azul', value: 'from-blue-500 to-cyan-400', bgColor: 'bg-blue-500/10', borderColor: 'border-blue-500/20' },
+  { label: 'Índigo', value: 'from-indigo-500 to-violet-400', bgColor: 'bg-indigo-500/10', borderColor: 'border-indigo-500/20' },
+  { label: 'Cian', value: 'from-cyan-500 to-sky-400', bgColor: 'bg-cyan-500/10', borderColor: 'border-cyan-500/20' },
+  { label: 'Ámbar', value: 'from-amber-500 to-orange-400', bgColor: 'bg-amber-500/10', borderColor: 'border-amber-500/20' },
+  { label: 'Violeta', value: 'from-violet-500 to-purple-400', bgColor: 'bg-violet-500/10', borderColor: 'border-violet-500/20' },
+  { label: 'Rosa', value: 'from-pink-500 to-rose-400', bgColor: 'bg-pink-500/10', borderColor: 'border-pink-500/20' },
+  { label: 'Gris', value: 'from-slate-400 to-slate-500', bgColor: 'bg-slate-500/10', borderColor: 'border-slate-500/20' },
+];
+
+const EMPTY_FORM = {
+  type: '', brand_model: '', serial_number: '', service_tag: '', ip_address: '', mac_address: '',
+  status: 'active', branch_id: '', purchase_date: '', warranty_end: '', notes: '', specs: [],
+};
+
+const cn = (...classes) => classes.filter(Boolean).join(' ');
+const getErrorMessage = (error) => error?.response?.data?.message || error?.response?.data?.error || error?.message || 'Ocurrió un error inesperado.';
+
+function readCustomCategories() {
+  try {
+    const stored = JSON.parse(localStorage.getItem('customCategories') || '[]');
+    return Array.isArray(stored) ? stored : [];
+  } catch {
+    return [];
   }
-};
+}
 
-// Categorías personalizadas
-const loadCustomCategories = () => {
-  const saved = localStorage.getItem('customCategories');
-  return saved ? JSON.parse(saved) : {};
-};
-
-const saveCustomCategories = (custom) => {
-  localStorage.setItem('customCategories', JSON.stringify(custom));
-};
-
-// Componente de badge de estado
-const StatusBadge = ({ status }) => {
-  const config = {
-    active: { icon: CheckCircle, color: 'text-green-600', bg: 'bg-green-100 dark:bg-green-900', label: 'Activo' },
-    repair: { icon: Wrench, color: 'text-yellow-600', bg: 'bg-yellow-100 dark:bg-yellow-900', label: 'Reparación' },
-    damaged: { icon: AlertCircle, color: 'text-red-600', bg: 'bg-red-100 dark:bg-red-900', label: 'Dañado' }
+function StatusBadge({ status }) {
+  const styles = {
+    active: { label: 'Operativo', className: 'border-emerald-500/20 bg-emerald-500/10 text-emerald-400', icon: CheckCircle2 },
+    repair: { label: 'En reparación', className: 'border-amber-500/20 bg-amber-500/10 text-amber-400', icon: Wrench },
+    damaged: { label: 'Dañado', className: 'border-rose-500/20 bg-rose-500/10 text-rose-400', icon: AlertTriangle },
   };
-  const c = config[status] || config.active;
-  const Icon = c.icon;
-  return (
-    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs ${c.bg} ${c.color}`}>
-      <Icon size={12} />
-      {c.label}
-    </span>
-  );
-};
+  const config = styles[status] || { label: status || 'Sin estado', className: 'border-slate-500/20 bg-slate-500/10 text-slate-400', icon: Activity };
+  const Icon = config.icon;
+  return <span className={cn('inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-1 text-[11px] font-semibold', config.className)}><Icon size={12} />{config.label}</span>;
+}
+
+function IconTile({ category, size = 'normal' }) {
+  const Icon = category?.icon || Package;
+  return <div className={cn('flex shrink-0 items-center justify-center rounded-xl border bg-gradient-to-br text-white shadow-lg shadow-black/10', category?.color || 'from-emerald-500 to-teal-400', category?.borderColor || 'border-emerald-500/20', size === 'small' ? 'h-9 w-9' : 'h-11 w-11')}><Icon size={size === 'small' ? 17 : 20} strokeWidth={1.8} /></div>;
+}
+
+function StatCard({ label, value, detail, icon: Icon, accent = 'emerald' }) {
+  const accents = {
+    emerald: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/15',
+    blue: 'bg-blue-500/10 text-blue-400 border-blue-500/15',
+    amber: 'bg-amber-500/10 text-amber-400 border-amber-500/15',
+    rose: 'bg-rose-500/10 text-rose-400 border-rose-500/15',
+  };
+  return <div className="group min-w-0 rounded-xl border border-slate-200/70 bg-white/80 p-4 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-emerald-500/30 hover:shadow-md dark:border-white/[0.07] dark:bg-[#111827]/90 dark:shadow-black/10 dark:hover:shadow-emerald-950/20">
+    <div className="flex items-start justify-between gap-3"><div className="min-w-0"><p className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500 dark:text-slate-500">{label}</p><p className="mt-2 text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">{value}</p></div><span className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border', accents[accent] || accents.emerald)}><Icon size={17} strokeWidth={1.8} /></span></div>
+    {detail && <p className="mt-2 truncate text-xs text-slate-500 dark:text-slate-400">{detail}</p>}
+  </div>;
+}
+
+function ModalShell({ title, subtitle, icon: Icon = Package, onClose, children, size = 'max-w-2xl' }) {
+  return <div className="fixed inset-0 z-[90] flex items-center justify-center overflow-y-auto bg-slate-950/70 p-3 backdrop-blur-sm sm:p-6" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
+    <section role="dialog" aria-modal="true" className={cn('my-auto w-full overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl shadow-black/30 dark:border-white/10 dark:bg-[#0F172A]', size)}>
+      <header className="flex items-start justify-between gap-4 border-b border-slate-200 px-5 py-4 dark:border-white/[0.07] sm:px-6"><div className="flex min-w-0 items-center gap-3"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-emerald-500/20 bg-emerald-500/10 text-emerald-500"><Icon size={19} /></span><div className="min-w-0"><h2 className="truncate text-base font-semibold text-slate-900 dark:text-white">{title}</h2>{subtitle && <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{subtitle}</p>}</div></div><button type="button" onClick={onClose} aria-label="Cerrar" className="rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-white/[0.07] dark:hover:text-white"><X size={18} /></button></header>
+      {children}
+    </section>
+  </div>;
+}
+
+function Field({ label, children, className = '' }) {
+  return <label className={cn('block min-w-0 space-y-1.5', className)}><span className="text-[11px] font-semibold text-slate-600 dark:text-slate-400">{label}</span>{children}</label>;
+}
+
+const inputClass = 'w-full rounded-lg border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-emerald-500/60 focus:ring-2 focus:ring-emerald-500/10 dark:border-white/[0.09] dark:bg-[#0A0E17] dark:text-slate-100 dark:placeholder:text-slate-600';
+const primaryButton = 'inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-500 px-3.5 py-2.5 text-sm font-semibold text-slate-950 shadow-sm shadow-emerald-950/20 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-50';
+const secondaryButton = 'inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-300 dark:hover:bg-white/[0.07]';
 
 export default function InventoryPage() {
   const [hardware, setHardware] = useState([]);
-  const [filtered, setFiltered] = useState([]);
-  const [stats, setStats] = useState(null);
+  const [stats, setStats] = useState({});
   const [branches, setBranches] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [pageError, setPageError] = useState('');
+  const [actionError, setActionError] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [viewMode, setViewMode] = useState('grid');
+  const [selectedCategory, setSelectedCategory] = useState('all');
   const [showForm, setShowForm] = useState(false);
   const [showCategoryForm, setShowCategoryForm] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [selectedItem, setSelectedItem] = useState(null);
-  const [selectedCategory, setSelectedCategory] = useState(null);
-  const [customCategories, setCustomCategories] = useState(loadCustomCategories());
-  const [newCategory, setNewCategory] = useState({
-    name: '',
-    icon: 'Package',
-    color: 'from-slate-500 to-gray-500'
-  });
-  const [formData, setFormData] = useState({
-    type: '',
-    brand_model: '',
-    serial_number: '',
-    service_tag: '',
-    ip_address: '',
-    mac_address: '',
-    status: 'active',
-    branch_id: '',
-    purchase_date: '',
-    warranty_end: '',
-    notes: '',
-    specs: []
-  });
+  const [saving, setSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
+  const [customCategories, setCustomCategories] = useState(readCustomCategories);
+  const [newCategory, setNewCategory] = useState({ name: '', icon: 'Package', color: CATEGORY_COLORS[0].value });
+  const [formData, setFormData] = useState(EMPTY_FORM);
 
-  const allCategories = { ...DEFAULT_CATEGORIES, ...customCategories };
+  const categories = useMemo(() => [
+    ...DEFAULT_CATEGORIES,
+    ...customCategories.map((category) => ({ ...category, icon: AVAILABLE_ICONS[category.iconName] || Package })),
+  ], [customCategories]);
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  useEffect(() => {
-    if (selectedCategory) {
-      setFiltered(hardware.filter(item => item.type === selectedCategory));
-    } else {
-      setFiltered(hardware);
-    }
-  }, [hardware, selectedCategory]);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    setPageError('');
     try {
-      const [hardwareData, statsData, branchesData] = await Promise.all([
-        hardwareService.getAll(),
-        hardwareService.getStats(),
-        branchService.getAll()
+      const [hardwareResult, statsResult, branchResult] = await Promise.all([
+        hardwareService.getAll(), hardwareService.getStats(), branchService.getAll(),
       ]);
-      setHardware(hardwareData);
-      setFiltered(hardwareData);
-      setStats(statsData);
-      setBranches(branchesData);
+      setHardware(Array.isArray(hardwareResult) ? hardwareResult : hardwareResult?.items || hardwareResult?.data || []);
+      setStats(statsResult && typeof statsResult === 'object' ? statsResult : {});
+      setBranches(Array.isArray(branchResult) ? branchResult : branchResult?.items || branchResult?.data || []);
     } catch (error) {
-      console.error('Error loading hardware:', error);
+      setPageError(getErrorMessage(error));
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    // Validar campos requeridos
-    if (!formData.type) {
-      alert('Seleccione un tipo de equipo');
-      return;
-    }
-    if (!formData.brand_model) {
-      alert('Ingrese la marca/modelo del equipo');
-      return;
-    }
-    
-    try {
-      const dataToSave = {
-        ...formData,
-        specs: formData.specs.filter(s => s.key && s.value).map(s => ({
-          key: s.key,
-          value: s.value
-        }))
-      };
-      
-      if (editingItem) {
-        await hardwareService.update(editingItem.id, dataToSave);
-      } else {
-        await hardwareService.create(dataToSave);
-      }
-      await loadData();
-      setShowForm(false);
-      setEditingItem(null);
-      resetForm();
-    } catch (error) {
-      console.error('Error saving hardware:', error);
-      alert('Error al guardar el equipo: ' + (error.response?.data?.error || error.message));
-    }
-  };
+  useEffect(() => { loadData(); }, [loadData]);
 
-  const resetForm = () => {
-    setFormData({
-      type: '',
-      brand_model: '',
-      serial_number: '',
-      service_tag: '',
-      ip_address: '',
-      mac_address: '',
-      status: 'active',
-      branch_id: '',
-      purchase_date: '',
-      warranty_end: '',
-      notes: '',
-      specs: []
+  const filteredHardware = useMemo(() => {
+    const query = searchTerm.trim().toLocaleLowerCase();
+    return hardware.filter((item) => {
+      const matchesCategory = selectedCategory === 'all' || item.type === selectedCategory;
+      const matchesStatus = statusFilter === 'all' || item.status === statusFilter;
+      const searchable = [item.type, item.brand_model, item.serial_number, item.service_tag, item.ip_address, item.mac_address, item.branch_name, item.notes]
+        .filter(Boolean).join(' ').toLocaleLowerCase();
+      return matchesCategory && matchesStatus && (!query || searchable.includes(query));
     });
+  }, [hardware, searchTerm, selectedCategory, statusFilter]);
+
+  const countForCategory = (categoryName) => hardware.filter((item) => item.type === categoryName).length;
+  const activeCount = hardware.filter((item) => item.status === 'active').length;
+  const repairCount = hardware.filter((item) => item.status === 'repair').length;
+  const damagedCount = hardware.filter((item) => item.status === 'damaged').length;
+
+  const openCreateForm = (type = '') => {
+    setActionError('');
+    setEditingItem(null);
+    const category = categories.find((item) => item.name === type);
+    setFormData({ ...EMPTY_FORM, type, specs: (category?.defaultSpecs || []).map((spec) => ({ ...spec, value: spec.value ?? '' })) });
+    setShowForm(true);
   };
 
-  const handleDelete = async (id) => {
-    if (confirm('¿Eliminar este equipo? Esta acción no se puede deshacer.')) {
-      try {
-        await hardwareService.delete(id);
-        await loadData();
-        setSelectedItem(null);
-      } catch (error) {
-        alert('Error al eliminar el equipo');
-      }
-    }
-  };
-
-  const getCategoryIcon = (categoryName) => {
-    const category = allCategories[categoryName];
-    const iconName = category?.icon || 'Package';
-    const iconObj = AVAILABLE_ICONS.find(i => i.name === iconName);
-    return iconObj ? iconObj.icon : Package;
-  };
-
-  const getItemCountByCategory = (category) => {
-    return hardware.filter(item => item.type === category).length;
+  const openEditForm = (item) => {
+    setActionError('');
+    setEditingItem(item);
+    const category = categories.find((entry) => entry.name === item.type);
+    const defaults = (category?.defaultSpecs || []).map((spec) => ({ ...spec, value: spec.value ?? '' }));
+    const existing = Array.isArray(item.specs) ? item.specs : [];
+    const normalizedExisting = existing.map((spec) => ({
+      key: spec.key ?? spec.spec_key ?? spec.name ?? '',
+      label: spec.label ?? spec.spec_label ?? spec.key ?? spec.spec_key ?? spec.name ?? 'Especificación',
+      type: spec.type || 'text',
+      options: spec.options,
+      value: spec.value ?? spec.spec_value ?? '',
+    })).filter((spec) => spec.key);
+    const mergedSpecs = defaults.map((spec) => {
+      const match = normalizedExisting.find((entry) => entry.key === spec.key);
+      return match ? { ...spec, ...match, value: match.value } : spec;
+    });
+    normalizedExisting.forEach((spec) => { if (!mergedSpecs.some((entry) => entry.key === spec.key)) mergedSpecs.push(spec); });
+    setFormData({ ...EMPTY_FORM, ...item, branch_id: item.branch_id == null ? '' : String(item.branch_id), specs: mergedSpecs });
+    setShowForm(true);
   };
 
   const handleTypeChange = (type) => {
-    const category = allCategories[type];
-    const defaultSpecs = category && category.defaultSpecs ? category.defaultSpecs.map(spec => ({
-      key: spec.key,
-      value: '',
-      label: spec.label,
-      type: spec.type,
-      options: spec.options,
-      placeholder: spec.placeholder
-    })) : [];
-    
-    setFormData({
-      ...formData,
-      type: type,
-      specs: defaultSpecs
-    });
+    const category = categories.find((item) => item.name === type);
+    setFormData((previous) => ({ ...previous, type, specs: (category?.defaultSpecs || []).map((spec) => ({ ...spec, value: spec.value ?? '' })) }));
   };
 
-  const handleSpecChange = (index, value) => {
-    const newSpecs = [...formData.specs];
-    newSpecs[index].value = value;
-    setFormData({ ...formData, specs: newSpecs });
-  };
+  const updateSpec = (index, value) => setFormData((previous) => ({
+    ...previous,
+    specs: previous.specs.map((spec, specIndex) => specIndex === index ? { ...spec, value } : spec),
+  }));
 
-  const addCustomSpec = () => {
-    setFormData({
-      ...formData,
-      specs: [...formData.specs, { key: '', value: '', label: '', type: 'text', isCustom: true }]
-    });
-  };
+  const addSpec = () => setFormData((previous) => ({ ...previous, specs: [...previous.specs, { key: `custom_${Date.now()}`, label: '', type: 'text', value: '' }] }));
+  const removeSpec = (index) => setFormData((previous) => ({ ...previous, specs: previous.specs.filter((_, specIndex) => specIndex !== index) }));
+  const renameSpec = (index, label) => setFormData((previous) => ({ ...previous, specs: previous.specs.map((spec, specIndex) => specIndex === index ? { ...spec, label, key: spec.key.startsWith('custom_') ? label.trim().toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '') || spec.key : spec.key } : spec) }));
 
-  const removeSpec = (index) => {
-    const newSpecs = formData.specs.filter((_, i) => i !== index);
-    setFormData({ ...formData, specs: newSpecs });
-  };
-
-  const updateSpecKey = (index, key) => {
-    const newSpecs = [...formData.specs];
-    newSpecs[index].key = key;
-    newSpecs[index].label = key;
-    setFormData({ ...formData, specs: newSpecs });
-  };
-
-  const addCustomCategory = () => {
-    if (!newCategory.name.trim()) {
-      alert('Ingrese un nombre para la categoría');
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setActionError('');
+    if (!formData.type || !formData.brand_model?.trim()) {
+      setActionError('Selecciona una categoría e indica la marca o modelo del equipo.');
       return;
     }
-    
-    const categoryKey = newCategory.name.replace(/\s+/g, '_');
-    const updatedCustom = {
-      ...customCategories,
-      [categoryKey]: {
-        name: newCategory.name,
-        icon: newCategory.icon,
-        color: newCategory.color,
-        bgColor: 'bg-slate-50 dark:bg-slate-800/50',
-        borderColor: 'border-slate-200 dark:border-slate-700',
-        defaultSpecs: []
-      }
+    setSaving(true);
+    const payload = {
+      ...formData,
+      branch_id: formData.branch_id === '' ? null : formData.branch_id,
+      specs: (formData.specs || []).filter((spec) => spec.key && spec.key.trim() && spec.value !== '' && spec.value !== null && spec.value !== undefined)
+        .map((spec) => ({ key: spec.key, value: String(spec.value) })),
     };
-    
-    setCustomCategories(updatedCustom);
-    saveCustomCategories(updatedCustom);
-    setShowCategoryForm(false);
-    setNewCategory({ name: '', icon: 'Package', color: 'from-slate-500 to-gray-500' });
-    loadData();
-  };
-
-  const deleteCustomCategory = (categoryKey) => {
-    if (confirm(`¿Eliminar la categoría "${customCategories[categoryKey]?.name}"?`)) {
-      const updated = { ...customCategories };
-      delete updated[categoryKey];
-      setCustomCategories(updated);
-      saveCustomCategories(updated);
-      if (selectedCategory === categoryKey) {
-        setSelectedCategory(null);
-      }
-      loadData();
+    try {
+      if (editingItem) await hardwareService.update(editingItem.id, payload);
+      else await hardwareService.create(payload);
+      setShowForm(false);
+      setEditingItem(null);
+      await loadData();
+    } catch (error) {
+      setActionError(getErrorMessage(error));
+    } finally {
+      setSaving(false);
     }
   };
 
-  const colorOptions = [
-    'from-red-500 to-orange-500', 'from-orange-500 to-yellow-500', 'from-yellow-500 to-green-500',
-    'from-green-500 to-teal-500', 'from-teal-500 to-cyan-500', 'from-cyan-500 to-blue-500',
-    'from-blue-500 to-indigo-500', 'from-indigo-500 to-purple-500', 'from-purple-500 to-pink-500',
-    'from-pink-500 to-rose-500', 'from-slate-500 to-gray-500'
-  ];
+  const handleDelete = async (item) => {
+    const label = item.brand_model || item.serial_number || 'este equipo';
+    if (!window.confirm(`¿Seguro que deseas eliminar ${label}? Esta acción no se puede deshacer.`)) return;
+    setActionError('');
+    setDeletingId(item.id);
+    try {
+      await hardwareService.delete(item.id);
+      setSelectedItem((current) => current?.id === item.id ? null : current);
+      await loadData();
+    } catch (error) {
+      setActionError(getErrorMessage(error));
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-slate-500 dark:text-slate-400">Cargando inventario...</div>
-      </div>
-    );
-  }
+  const handleAddCategory = (event) => {
+    event.preventDefault();
+    const name = newCategory.name.trim();
+    if (!name) return;
+    if (categories.some((category) => category.name.toLocaleLowerCase() === name.toLocaleLowerCase())) {
+      setActionError('Ya existe una categoría con ese nombre.');
+      return;
+    }
+    const color = CATEGORY_COLORS.find((item) => item.value === newCategory.color) || CATEGORY_COLORS[0];
+    const category = {
+      name, iconName: newCategory.icon, color: color.value, bgColor: color.bgColor,
+      borderColor: color.borderColor, defaultSpecs: [], key: name.replace(/\s+/g, '_'),
+    };
+    const updated = [...customCategories, category];
+    setCustomCategories(updated);
+    try { localStorage.setItem('customCategories', JSON.stringify(updated)); } catch { /* La categoría queda disponible durante esta sesión. */ }
+    setSelectedCategory(name);
+    setNewCategory({ name: '', icon: 'Package', color: CATEGORY_COLORS[0].value });
+    setShowCategoryForm(false);
+    setActionError('');
+  };
 
-  return (
-    <div className="p-6 max-w-[1600px] mx-auto">
-      {/* Header con zoom - más grande */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-800 dark:text-white flex items-center gap-3">
-            <Package className="w-8 h-8 text-indigo-600" />
-            Inventario de Hardware
-          </h1>
-          <p className="text-base text-slate-500 dark:text-slate-400 mt-1">
-            Gestión completa de equipos e infraestructura IT por categorías
-          </p>
-        </div>
-        <div className="flex gap-3">
-          <button
-            onClick={() => setShowCategoryForm(true)}
-            className="border-2 border-indigo-600 text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/30 px-5 py-2.5 rounded-xl flex items-center gap-2 transition-all font-medium"
-          >
-            <Plus size={18} />
-            Nueva Categoría
-          </button>
-          <button
-            onClick={() => {
-              setEditingItem(null);
-              setSelectedCategory(null);
-              resetForm();
-              setShowForm(true);
-            }}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl flex items-center gap-2 transition-all duration-200 shadow-sm hover:shadow-md font-medium"
-          >
-            <Plus size={18} />
-            Agregar Equipo
-          </button>
-        </div>
-      </div>
+  const removeCustomCategory = (categoryName) => {
+    const categoryHasHardware = hardware.some((item) => item.type === categoryName);
+    const message = categoryHasHardware
+      ? `La categoría «${categoryName}» tiene equipos asociados. ¿Quieres quitarla de la lista de categorías? Los equipos existentes no se eliminarán.`
+      : `¿Eliminar la categoría «${categoryName}»?`;
+    if (!window.confirm(message)) return;
+    const updated = customCategories.filter((category) => category.name !== categoryName);
+    setCustomCategories(updated);
+    try { localStorage.setItem('customCategories', JSON.stringify(updated)); } catch { /* Se mantiene el cambio en memoria. */ }
+    if (selectedCategory === categoryName) setSelectedCategory('all');
+  };
 
-      {/* Stats Grid - más grande */}
-      {stats && (
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-5 mb-8">
-          <div className="bg-white dark:bg-slate-800 rounded-xl p-5 shadow-sm border border-slate-200 dark:border-slate-700">
-            <p className="text-3xl font-bold text-slate-800 dark:text-white">{stats.total}</p>
-            <p className="text-sm text-slate-500 dark:text-slate-400">Total Equipos</p>
-          </div>
-          <div className="bg-white dark:bg-slate-800 rounded-xl p-5 shadow-sm border border-slate-200 dark:border-slate-700">
-            <p className="text-3xl font-bold text-green-600">{stats.active}</p>
-            <p className="text-sm text-slate-500 dark:text-slate-400">Activos</p>
-          </div>
-          <div className="bg-white dark:bg-slate-800 rounded-xl p-5 shadow-sm border border-slate-200 dark:border-slate-700">
-            <p className="text-3xl font-bold text-yellow-600">{stats.repair}</p>
-            <p className="text-sm text-slate-500 dark:text-slate-400">Reparación</p>
-          </div>
-          <div className="bg-white dark:bg-slate-800 rounded-xl p-5 shadow-sm border border-slate-200 dark:border-slate-700">
-            <p className="text-3xl font-bold text-indigo-600">{stats.fiscal_printers || 0}</p>
-            <p className="text-sm text-slate-500 dark:text-slate-400">Impresoras Fiscales</p>
-          </div>
-          <div className="bg-white dark:bg-slate-800 rounded-xl p-5 shadow-sm border border-slate-200 dark:border-slate-700">
-            <p className="text-3xl font-bold text-blue-600">{(stats.desktops || 0) + (stats.laptops || 0)}</p>
-            <p className="text-sm text-slate-500 dark:text-slate-400">Computadoras</p>
-          </div>
-          <div className="bg-white dark:bg-slate-800 rounded-xl p-5 shadow-sm border border-slate-200 dark:border-slate-700">
-            <p className="text-3xl font-bold text-purple-600">{stats.servers || 0}</p>
-            <p className="text-sm text-slate-500 dark:text-slate-400">Servidores</p>
-          </div>
-          <div className="bg-white dark:bg-slate-800 rounded-xl p-5 shadow-sm border border-slate-200 dark:border-slate-700">
-            <p className="text-3xl font-bold text-cyan-600">{stats.network_devices || 0}</p>
-            <p className="text-sm text-slate-500 dark:text-slate-400">Equipos Red</p>
-          </div>
-        </div>
-      )}
+  const categoryFor = (item) => categories.find((category) => category.name === item.type) || { name: item.type || 'Equipo', icon: Package, color: 'from-emerald-500 to-teal-400', bgColor: 'bg-emerald-500/10', borderColor: 'border-emerald-500/20' };
+  const formatDate = (value) => {
+    if (!value) return '—';
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? value : date.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
+  };
 
-      {/* Folders / Categories View */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Sidebar con carpetas - más grande */}
-        <div className="lg:col-span-1">
-          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
-            <div className="p-5 border-b border-slate-200 dark:border-slate-700">
-              <h3 className="text-lg font-semibold text-slate-800 dark:text-white">Categorías</h3>
-              <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Selecciona una carpeta</p>
-            </div>
-            <div className="p-3">
-              <button
-                onClick={() => setSelectedCategory(null)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all mb-2 ${
-                  selectedCategory === null 
-                    ? 'bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300' 
-                    : 'hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300'
-                }`}
-              >
-                <Folder className="w-5 h-5" />
-                <span className="flex-1 text-left font-medium">Todos los equipos</span>
-                <span className="text-sm text-slate-400">{hardware.length}</span>
-              </button>
-              
-              {Object.entries(allCategories).map(([key, category]) => {
-                const Icon = getCategoryIcon(key);
-                const itemCount = getItemCountByCategory(key);
-                const isSelected = selectedCategory === key;
-                
-                return (
-                  <div key={key} className="mb-2">
-                    <button
-                      onClick={() => setSelectedCategory(key)}
-                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
-                        isSelected 
-                          ? 'bg-gradient-to-r ' + category.color + ' text-white shadow-md' 
-                          : 'hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300'
-                      }`}
-                    >
-                      <Icon className="w-5 h-5" />
-                      <span className="flex-1 text-left font-medium">{category.name}</span>
-                      <span className="text-sm opacity-70">{itemCount}</span>
-                    </button>
-                    {customCategories[key] && (
-                      <button
-                        onClick={(e) => { e.stopPropagation(); deleteCustomCategory(key); }}
-                        className="ml-12 mt-1 text-xs text-red-500 hover:text-red-700"
-                      >
-                        Eliminar categoría
-                      </button>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
+  const EquipmentCard = ({ item }) => {
+    const category = categoryFor(item);
+    const Icon = category.icon || Package;
+    const specEntries = (Array.isArray(item.specs) ? item.specs : []).filter((spec) => (spec.value ?? spec.spec_value) !== '' && (spec.value ?? spec.spec_value) != null).slice(0, 2);
+    return <article className="group relative flex min-w-0 flex-col overflow-hidden rounded-xl border border-slate-200/80 bg-white/90 transition duration-200 hover:-translate-y-0.5 hover:border-emerald-500/30 hover:shadow-lg hover:shadow-emerald-950/5 dark:border-white/[0.07] dark:bg-[#111827]/90 dark:hover:border-emerald-500/25 dark:hover:shadow-emerald-950/20">
+      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-500/50 to-transparent opacity-0 transition group-hover:opacity-100" />
+      <div className="flex items-start gap-3 p-4"><IconTile category={category} /><div className="min-w-0 flex-1 pt-0.5"><p className="truncate text-[10px] font-bold uppercase tracking-[0.13em] text-slate-500 dark:text-slate-500">{item.type || 'Equipo'}</p><h3 className="mt-1 line-clamp-2 text-sm font-semibold leading-5 text-slate-900 dark:text-slate-100">{item.brand_model || 'Equipo sin modelo'}</h3><div className="mt-2"><StatusBadge status={item.status} /></div></div><div className="flex items-center gap-0.5 opacity-100 transition sm:opacity-0 sm:group-hover:opacity-100"><button onClick={() => setSelectedItem(item)} title="Ver detalles" className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-emerald-600 dark:hover:bg-white/[0.07] dark:hover:text-emerald-400"><Eye size={15} /></button><button onClick={() => openEditForm(item)} title="Editar" className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-blue-600 dark:hover:bg-white/[0.07] dark:hover:text-blue-400"><Edit3 size={15} /></button></div></div>
+      <div className="mx-4 border-t border-slate-200/80 dark:border-white/[0.06]" />
+      <div className="grid grid-cols-2 gap-3 px-4 py-3"><div className="min-w-0"><p className="text-[10px] uppercase tracking-wider text-slate-400">Serial</p><p className="mt-1 truncate font-mono text-xs text-slate-600 dark:text-slate-300">{item.serial_number || 'No registrado'}</p></div><div className="min-w-0"><p className="text-[10px] uppercase tracking-wider text-slate-400">Sede</p><p className="mt-1 flex min-w-0 items-center gap-1 truncate text-xs text-slate-600 dark:text-slate-300"><MapPin size={12} className="shrink-0 text-slate-400" />{item.branch_name || 'Sin asignar'}</p></div></div>
+      {specEntries.length > 0 && <div className="mx-4 mb-3 flex flex-wrap gap-1.5">{specEntries.map((spec, index) => <span key={`${spec.key || spec.spec_key || index}`} className="max-w-full truncate rounded-md border border-slate-200 bg-slate-50 px-2 py-1 text-[10px] text-slate-500 dark:border-white/[0.06] dark:bg-white/[0.025] dark:text-slate-400">{spec.label || spec.key || spec.spec_key}: {spec.value ?? spec.spec_value}</span>)}</div>}
+      <footer className="mt-auto flex items-center justify-between gap-3 border-t border-slate-200/70 bg-slate-50/70 px-4 py-3 dark:border-white/[0.05] dark:bg-white/[0.015]"><span className="truncate text-[11px] text-slate-500">{item.ip_address || 'Sin IP asignada'}</span><button onClick={() => setSelectedItem(item)} className="inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-emerald-600 transition hover:text-emerald-500 dark:text-emerald-400">Ver ficha <ChevronRight size={14} /></button></footer>
+    </article>;
+  };
 
-        {/* Main Content - Items Grid más grande */}
-        <div className="lg:col-span-3">
-          {selectedCategory && allCategories[selectedCategory] && (
-            <div className={`mb-6 p-5 rounded-xl ${allCategories[selectedCategory].bgColor} border ${allCategories[selectedCategory].borderColor}`}>
-              <div className="flex items-center gap-4">
-                {(() => {
-                  const Icon = getCategoryIcon(selectedCategory);
-                  return <Icon className="w-10 h-10" />;
-                })()}
-                <div>
-                  <h2 className="text-2xl font-bold">{allCategories[selectedCategory].name}</h2>
-                  <p className="text-base opacity-75">{filtered.length} equipos registrados</p>
-                </div>
-              </div>
-            </div>
-          )}
+  return <div className="relative min-h-full overflow-hidden bg-slate-50 text-slate-900 dark:bg-[#0A0E17] dark:text-slate-100">
+    <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden"><div className="absolute -right-32 top-24 h-96 w-96 rounded-full bg-emerald-500/[0.045] blur-3xl dark:bg-emerald-500/[0.055]" /><div className="absolute -left-36 top-[28rem] h-80 w-80 rounded-full bg-blue-500/[0.035] blur-3xl dark:bg-blue-500/[0.045]" /></div>
+    <div className="relative mx-auto w-full max-w-[1600px] space-y-5 p-4 sm:p-6 xl:p-8">
+      <header className="flex flex-col justify-between gap-4 border-b border-slate-200/80 pb-5 dark:border-white/[0.07] md:flex-row md:items-center"><div className="min-w-0"><div className="mb-2 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.19em] text-slate-400 dark:text-slate-500"><span>IT SUPPORT PLATFORM</span><ChevronRight size={12} /><span className="text-emerald-600 dark:text-emerald-400">Inventario</span></div><div className="flex items-center gap-3"><span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-emerald-500/20 bg-emerald-500/10 text-emerald-500"><Package size={22} strokeWidth={1.7} /></span><div><h1 className="text-2xl font-bold tracking-tight text-slate-950 dark:text-white sm:text-[28px]">Inventario de equipos</h1><p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Control centralizado de activos, sedes y especificaciones técnicas.</p></div></div></div><div className="flex flex-wrap items-center gap-2"><button type="button" onClick={() => { setActionError(''); setShowCategoryForm(true); }} className={secondaryButton}><Plus size={15} />Categoría</button><button type="button" onClick={() => openCreateForm(selectedCategory !== 'all' ? selectedCategory : '')} className={primaryButton}><Plus size={16} />Agregar equipo</button></div></header>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-            {filtered.map(item => {
-              const Icon = getCategoryIcon(item.type);
-              const category = allCategories[item.type];
-              const specs = item.specs || [];
-              
-              return (
-                <div
-                  key={item.id}
-                  onClick={() => setSelectedItem(item)}
-                  className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 hover:shadow-md hover:scale-[1.02] transition-all cursor-pointer overflow-hidden group"
-                >
-                  <div className={`h-2 bg-gradient-to-r ${category?.color || 'from-slate-500 to-slate-600'}`} />
-                  <div className="p-5">
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex items-center gap-3">
-                        <div className={`p-3 rounded-xl ${category?.bgColor || 'bg-slate-100 dark:bg-slate-700'}`}>
-                          <Icon className={`w-6 h-6 ${category?.color?.split(' ')[1] || 'text-slate-600'}`} />
-                        </div>
-                        <div>
-                          <h3 className="text-lg font-semibold text-slate-800 dark:text-white">{item.type}</h3>
-                          <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">{item.brand_model || 'Sin modelo'}</p>
-                        </div>
-                      </div>
-                      <StatusBadge status={item.status} />
-                    </div>
+      {pageError && <div className="flex flex-col gap-3 rounded-xl border border-rose-500/20 bg-rose-500/[0.06] p-4 text-sm text-rose-600 dark:text-rose-300 sm:flex-row sm:items-center sm:justify-between"><div className="flex items-center gap-2"><AlertCircle size={17} /><span>No se pudo cargar el inventario: {pageError}</span></div><button onClick={loadData} className={secondaryButton}><RefreshCw size={14} />Reintentar</button></div>}
+      {actionError && !showForm && !showCategoryForm && <div className="flex items-start justify-between gap-3 rounded-lg border border-rose-500/20 bg-rose-500/[0.06] px-4 py-3 text-sm text-rose-600 dark:text-rose-300"><span className="flex items-center gap-2"><AlertCircle size={16} />{actionError}</span><button onClick={() => setActionError('')} aria-label="Cerrar aviso"><X size={16} /></button></div>}
 
-                    <div className="space-y-2 mb-4">
-                      {specs.slice(0, 3).map((spec, idx) => (
-                        <div key={idx} className="flex justify-between text-sm">
-                          <span className="text-slate-500 dark:text-slate-400 capitalize">{spec.spec_key}:</span>
-                          <span className="text-slate-700 dark:text-slate-300 font-mono text-sm">{spec.spec_value}</span>
-                        </div>
-                      ))}
-                      {specs.length === 0 && (
-                        <p className="text-sm text-slate-400 italic">Sin especificaciones adicionales</p>
-                      )}
-                    </div>
+      <section className="grid grid-cols-2 gap-3 lg:grid-cols-4"><StatCard label="Activos registrados" value={loading ? '—' : (stats.total ?? hardware.length)} detail="Equipos en inventario" icon={Package} accent="emerald" /><StatCard label="Operativos" value={loading ? '—' : (stats.active ?? activeCount)} detail="En funcionamiento" icon={CheckCircle2} accent="emerald" /><StatCard label="En reparación" value={loading ? '—' : (stats.repair ?? repairCount)} detail="Requieren atención" icon={Wrench} accent="amber" /><StatCard label="Con incidencias" value={loading ? '—' : (stats.damaged ?? damagedCount)} detail="Dañados o fuera de servicio" icon={AlertCircle} accent="rose" /></section>
 
-                    <div className="space-y-2 text-sm border-t border-slate-100 dark:border-slate-700 pt-3">
-                      {item.serial_number && (
-                        <div className="flex justify-between">
-                          <span className="text-slate-500">Serial:</span>
-                          <code className="text-slate-600 dark:text-slate-400 font-mono text-sm">{item.serial_number}</code>
-                        </div>
-                      )}
-                      {item.service_tag && (
-                        <div className="flex justify-between">
-                          <span className="text-slate-500">Service Tag:</span>
-                          <code className="text-slate-600 dark:text-slate-400 font-mono text-sm">{item.service_tag}</code>
-                        </div>
-                      )}
-                      {item.branch_name && (
-                        <div className="flex justify-between">
-                          <span className="text-slate-500">Ubicación:</span>
-                          <span className="text-slate-600 dark:text-slate-400">{item.branch_name}</span>
-                        </div>
-                      )}
-                    </div>
+      <section className="rounded-xl border border-slate-200/80 bg-white/75 p-3 shadow-sm dark:border-white/[0.07] dark:bg-[#0F172A]/75 sm:p-4"><div className="flex flex-col gap-3 xl:flex-row xl:items-center"><div className="relative min-w-0 flex-1"><Search size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" /><input value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} placeholder="Buscar por modelo, serial, etiqueta, IP o sede..." className={cn(inputClass, 'border-transparent bg-slate-100/80 pl-10 focus:border-emerald-500/50 dark:border-transparent dark:bg-[#0A0E17]/80')} /><span className="pointer-events-none absolute right-3 top-1/2 hidden -translate-y-1/2 text-[10px] text-slate-500 2xl:block">{filteredHardware.length} resultados</span></div><div className="flex flex-wrap items-center gap-2"><label className="relative"><span className="sr-only">Filtrar por estado</span><Filter size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" /><select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)} className={cn(inputClass, 'w-full appearance-none py-2.5 pl-8 pr-8 text-xs sm:w-auto sm:min-w-[155px]')}><option value="all">Todos los estados</option><option value="active">Operativo</option><option value="repair">En reparación</option><option value="damaged">Dañado</option></select><ChevronDown size={13} className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400" /></label><div className="flex items-center rounded-lg border border-slate-200 bg-white p-1 dark:border-white/[0.08] dark:bg-[#0A0E17]"><button type="button" onClick={() => setViewMode('grid')} aria-label="Vista de cuadrícula" title="Cuadrícula" className={cn('rounded-md p-2 transition', viewMode === 'grid' ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'text-slate-400 hover:text-slate-700 dark:hover:text-slate-200')}><Grid2X2 size={16} /></button><button type="button" onClick={() => setViewMode('list')} aria-label="Vista de lista" title="Lista" className={cn('rounded-md p-2 transition', viewMode === 'list' ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'text-slate-400 hover:text-slate-700 dark:hover:text-slate-200')}><List size={17} /></button></div><button type="button" onClick={() => { setSearchTerm(''); setStatusFilter('all'); setSelectedCategory('all'); }} className="rounded-lg px-2.5 py-2 text-xs font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-white/[0.05] dark:hover:text-white">Limpiar filtros</button></div></div></section>
 
-                    <div className="flex justify-end gap-2 mt-4 pt-2 border-t border-slate-100 dark:border-slate-700 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button
-                        onClick={(e) => { e.stopPropagation(); setEditingItem(item); setFormData({...item, specs: item.specs || []}); setShowForm(true); }}
-                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition"
-                        title="Editar"
-                      >
-                        <Edit size={18} />
-                      </button>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); handleDelete(item.id); }}
-                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
-                        title="Eliminar"
-                      >
-                        <TrashIcon size={18} />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+      <section className="space-y-3"><div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between"><div><h2 className="text-sm font-semibold text-slate-900 dark:text-white">Categorías de equipos</h2><p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Filtra los activos por tipo de dispositivo.</p></div><p className="text-xs text-slate-500 dark:text-slate-500">{categories.length} categorías disponibles</p></div><div className="flex gap-2 overflow-x-auto pb-1"><button type="button" onClick={() => setSelectedCategory('all')} className={cn('flex shrink-0 items-center gap-2 rounded-lg border px-3 py-2 text-xs font-semibold transition', selectedCategory === 'all' ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300' : 'border-slate-200 bg-white/80 text-slate-500 hover:border-emerald-500/20 dark:border-white/[0.07] dark:bg-[#111827]/70 dark:text-slate-400')}><Box size={14} />Todos <span className="rounded-md bg-black/[0.05] px-1.5 py-0.5 text-[10px] dark:bg-white/[0.07]">{hardware.length}</span></button>{categories.map((category) => { const Icon = category.icon || Package; const isSelected = selectedCategory === category.name; const custom = customCategories.some((entry) => entry.name === category.name); return <div key={category.name} className="group/chip relative flex shrink-0 items-center"><button type="button" onClick={() => setSelectedCategory(category.name)} className={cn('flex items-center gap-2 rounded-lg border py-2 pl-3 pr-3 text-xs font-semibold transition', isSelected ? cn(category.bgColor, category.borderColor, 'text-slate-800 dark:text-slate-100') : 'border-slate-200 bg-white/80 text-slate-500 hover:border-slate-300 dark:border-white/[0.07] dark:bg-[#111827]/70 dark:text-slate-400 dark:hover:border-white/[0.14]')}><Icon size={14} className={isSelected ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'} />{category.name}<span className="rounded-md bg-black/[0.05] px-1.5 py-0.5 text-[10px] dark:bg-white/[0.07]">{countForCategory(category.name)}</span></button>{custom && <button type="button" onClick={() => removeCustomCategory(category.name)} title={`Eliminar categoría ${category.name}`} className="absolute -right-1 -top-1 hidden h-4 w-4 items-center justify-center rounded-full border border-slate-300 bg-white text-slate-500 shadow-sm hover:bg-rose-50 hover:text-rose-500 group-hover/chip:flex dark:border-slate-700 dark:bg-[#111827]"><X size={10} /></button>}</div>; })}</div></section>
 
-          {filtered.length === 0 && (
-            <div className="text-center py-20 bg-white dark:bg-slate-800 rounded-xl">
-              <Package className="w-20 h-20 text-slate-300 dark:text-slate-600 mx-auto mb-4" />
-              <p className="text-slate-500 dark:text-slate-400 text-lg">No hay equipos en esta categoría</p>
-              <button onClick={() => setShowForm(true)} className="mt-4 text-indigo-600 hover:text-indigo-700 font-medium">
-                Agregar el primer equipo
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Modal para crear nueva categoría */}
-      {showCategoryForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl max-w-md w-full p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold text-slate-800 dark:text-white">Nueva Categoría</h2>
-              <button onClick={() => setShowCategoryForm(false)} className="text-slate-400 hover:text-slate-600">
-                <X size={24} />
-              </button>
-            </div>
-            
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  Nombre de la Categoría *
-                </label>
-                <input
-                  type="text"
-                  value={newCategory.name}
-                  onChange={(e) => setNewCategory({...newCategory, name: e.target.value})}
-                  className="input"
-                  placeholder="Ej: Pistolas de Código de Barras"
-                  autoFocus
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                  Icono
-                </label>
-                <div className="grid grid-cols-6 gap-2 max-h-48 overflow-y-auto p-2 border border-slate-200 dark:border-slate-700 rounded-lg">
-                  {AVAILABLE_ICONS.map((iconItem) => {
-                    const IconComponent = iconItem.icon;
-                    const isSelected = newCategory.icon === iconItem.name;
-                    return (
-                      <button
-                        key={iconItem.name}
-                        type="button"
-                        onClick={() => setNewCategory({...newCategory, icon: iconItem.name})}
-                        className={`p-2 rounded-lg transition-all ${
-                          isSelected 
-                            ? 'bg-indigo-100 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-300' 
-                            : 'hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400'
-                        }`}
-                        title={iconItem.name}
-                      >
-                        <IconComponent className="w-6 h-6 mx-auto" />
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                  Color de fondo
-                </label>
-                <div className="grid grid-cols-4 gap-2">
-                  {colorOptions.map((color, idx) => (
-                    <button
-                      key={idx}
-                      type="button"
-                      onClick={() => setNewCategory({...newCategory, color: color})}
-                      className={`h-10 rounded-lg bg-gradient-to-r ${color} ${
-                        newCategory.color === color ? 'ring-2 ring-indigo-500 ring-offset-2' : ''
-                      }`}
-                    />
-                  ))}
-                </div>
-              </div>
-
-              <div className="flex gap-3 pt-4">
-                <button onClick={() => setShowCategoryForm(false)} className="btn-secondary flex-1">
-                  Cancelar
-                </button>
-                <button onClick={addCustomCategory} className="btn-primary flex-1">
-                  Crear Categoría
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modal de formulario para agregar/editar equipo */}
-      {showForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
-          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center p-5 border-b border-slate-200 dark:border-slate-700 sticky top-0 bg-white dark:bg-slate-800">
-              <h2 className="text-xl font-bold text-slate-800 dark:text-white">
-                {editingItem ? 'Editar Equipo' : 'Agregar Equipo'}
-              </h2>
-              <button onClick={() => { setShowForm(false); setEditingItem(null); resetForm(); }} className="text-slate-400 hover:text-slate-600">
-                <X size={24} />
-              </button>
-            </div>
-            
-            <form onSubmit={handleSubmit} className="p-5 space-y-5">
-              {/* Tipo de equipo */}
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  Tipo de Equipo *
-                </label>
-                <select
-                  value={formData.type}
-                  onChange={(e) => handleTypeChange(e.target.value)}
-                  className="input"
-                  required
-                  disabled={editingItem}
-                >
-                  <option value="">Seleccionar tipo</option>
-                  {Object.keys(allCategories).map(cat => (
-                    <option key={cat} value={cat}>{allCategories[cat].name}</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Campos básicos */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                    Marca / Modelo *
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.brand_model}
-                    onChange={(e) => setFormData({...formData, brand_model: e.target.value})}
-                    className="input"
-                    placeholder="Ej: Epson TM-T88VI"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                    Número de Serie
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.serial_number}
-                    onChange={(e) => setFormData({...formData, serial_number: e.target.value})}
-                    className="input font-mono"
-                    placeholder="Número de serie único"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                    Service Tag
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.service_tag}
-                    onChange={(e) => setFormData({...formData, service_tag: e.target.value})}
-                    className="input font-mono"
-                    placeholder="Service Tag (Dell, HP, etc.)"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                    Estado
-                  </label>
-                  <select
-                    value={formData.status}
-                    onChange={(e) => setFormData({...formData, status: e.target.value})}
-                    className="input"
-                  >
-                    <option value="active">Activo</option>
-                    <option value="repair">En Reparación</option>
-                    <option value="damaged">Dañado</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                    IP Address
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.ip_address}
-                    onChange={(e) => setFormData({...formData, ip_address: e.target.value})}
-                    className="input font-mono"
-                    placeholder="192.168.1.100"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                    MAC Address
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.mac_address}
-                    onChange={(e) => setFormData({...formData, mac_address: e.target.value})}
-                    className="input font-mono"
-                    placeholder="AA:BB:CC:DD:EE:FF"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                    Sucursal
-                  </label>
-                  <select
-                    value={formData.branch_id}
-                    onChange={(e) => setFormData({...formData, branch_id: e.target.value})}
-                    className="input"
-                  >
-                    <option value="">Seleccionar sucursal</option>
-                    {branches.map(b => (
-                      <option key={b.id} value={b.id}>{b.name}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                    Fecha de Compra
-                  </label>
-                  <input
-                    type="date"
-                    value={formData.purchase_date}
-                    onChange={(e) => setFormData({...formData, purchase_date: e.target.value})}
-                    className="input"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  Fecha Fin Garantía
-                </label>
-                <input
-                  type="date"
-                  value={formData.warranty_end}
-                  onChange={(e) => setFormData({...formData, warranty_end: e.target.value})}
-                  className="input"
-                />
-              </div>
-
-              {/* Especificaciones personalizadas según categoría */}
-              {formData.type && allCategories[formData.type] && (
-                <div className="border-t border-slate-200 dark:border-slate-700 pt-4">
-                  <div className="flex justify-between items-center mb-3">
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-                      Especificaciones del equipo
-                    </label>
-                    <button
-                      type="button"
-                      onClick={addCustomSpec}
-                      className="text-indigo-600 hover:text-indigo-700 text-sm flex items-center gap-1"
-                    >
-                      <PlusCircle size={14} />
-                      Agregar especificación
-                    </button>
-                  </div>
-                  
-                  <div className="space-y-3">
-                    {formData.specs.map((spec, index) => (
-                      <div key={index} className="flex gap-2 items-start">
-                        {spec.isCustom ? (
-                          <input
-                            type="text"
-                            value={spec.key}
-                            onChange={(e) => updateSpecKey(index, e.target.value)}
-                            placeholder="Nombre (ej: Resolución)"
-                            className="flex-1 input text-sm"
-                          />
-                        ) : (
-                          <span className="flex-1 text-sm font-medium text-slate-700 dark:text-slate-300 pt-2">
-                            {spec.label}:
-                          </span>
-                        )}
-                        
-                        {spec.type === 'select' ? (
-                          <select
-                            value={spec.value}
-                            onChange={(e) => handleSpecChange(index, e.target.value)}
-                            className="flex-2 input text-sm"
-                          >
-                            <option value="">Seleccionar...</option>
-                            {spec.options?.map(opt => (
-                              <option key={opt} value={opt}>{opt}</option>
-                            ))}
-                          </select>
-                        ) : spec.type === 'boolean' ? (
-                          <div className="flex-2">
-                            <label className="inline-flex items-center gap-2">
-                              <input
-                                type="checkbox"
-                                checked={spec.value === 'true' || spec.value === true}
-                                onChange={(e) => handleSpecChange(index, e.target.checked ? 'true' : 'false')}
-                                className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
-                              />
-                              <span className="text-sm text-slate-600">Sí / No</span>
-                            </label>
-                          </div>
-                        ) : (
-                          <input
-                            type="text"
-                            value={spec.value}
-                            onChange={(e) => handleSpecChange(index, e.target.value)}
-                            placeholder={spec.placeholder || 'Valor'}
-                            className="flex-2 input text-sm"
-                          />
-                        )}
-                        
-                        <button
-                          type="button"
-                          onClick={() => removeSpec(index)}
-                          className="p-2 text-red-500 hover:text-red-700"
-                        >
-                          <TrashIcon size={16} />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Notas */}
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  Notas adicionales
-                </label>
-                <textarea
-                  value={formData.notes}
-                  onChange={(e) => setFormData({...formData, notes: e.target.value})}
-                  rows="3"
-                  className="input"
-                  placeholder="Información adicional, observaciones, etc."
-                />
-              </div>
-
-              {/* Botones */}
-              <div className="flex gap-3 pt-4 border-t border-slate-200 dark:border-slate-700">
-                <button type="button" onClick={() => { setShowForm(false); setEditingItem(null); resetForm(); }} className="btn-secondary flex-1 py-3 text-base">
-                  Cancelar
-                </button>
-                <button type="submit" className="btn-primary flex-1 py-3 text-base">
-                  {editingItem ? 'Actualizar' : 'Guardar'} Equipo
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Modal de detalles del equipo */}
-      {selectedItem && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
-          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center p-5 border-b border-slate-200 dark:border-slate-700 sticky top-0 bg-white dark:bg-slate-800">
-              <h2 className="text-xl font-bold text-slate-800 dark:text-white">
-                Detalles del Equipo
-              </h2>
-              <button onClick={() => setSelectedItem(null)} className="text-slate-400 hover:text-slate-600">
-                <X size={24} />
-              </button>
-            </div>
-            
-            <div className="p-5 space-y-5">
-              {/* Tipo con gradiente */}
-              <div className={`p-5 rounded-xl bg-gradient-to-r ${allCategories[selectedItem.type]?.color || 'from-slate-500 to-slate-600'} bg-opacity-10`}>
-                <div className="flex items-center gap-4">
-                  {(() => {
-                    const Icon = getCategoryIcon(selectedItem.type);
-                    return <Icon className="w-10 h-10 text-white" />;
-                  })()}
-                  <div>
-                    <p className="text-sm opacity-75">Tipo de equipo</p>
-                    <p className="text-2xl font-bold">{selectedItem.type}</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Información general */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-slate-50 dark:bg-slate-700/50 p-4 rounded-lg">
-                  <p className="text-sm text-slate-500 dark:text-slate-400">Marca / Modelo</p>
-                  <p className="font-medium text-lg">{selectedItem.brand_model || '-'}</p>
-                </div>
-                <div className="bg-slate-50 dark:bg-slate-700/50 p-4 rounded-lg">
-                  <p className="text-sm text-slate-500 dark:text-slate-400">Estado</p>
-                  <StatusBadge status={selectedItem.status} />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-slate-50 dark:bg-slate-700/50 p-4 rounded-lg">
-                  <p className="text-sm text-slate-500 dark:text-slate-400">Número de Serie</p>
-                  <code className="text-sm font-mono">{selectedItem.serial_number || '-'}</code>
-                </div>
-                <div className="bg-slate-50 dark:bg-slate-700/50 p-4 rounded-lg">
-                  <p className="text-sm text-slate-500 dark:text-slate-400">Service Tag</p>
-                  <code className="text-sm font-mono">{selectedItem.service_tag || '-'}</code>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-slate-50 dark:bg-slate-700/50 p-4 rounded-lg">
-                  <p className="text-sm text-slate-500 dark:text-slate-400">IP Address</p>
-                  <code className="text-sm font-mono">{selectedItem.ip_address || '-'}</code>
-                </div>
-                <div className="bg-slate-50 dark:bg-slate-700/50 p-4 rounded-lg">
-                  <p className="text-sm text-slate-500 dark:text-slate-400">MAC Address</p>
-                  <code className="text-sm font-mono">{selectedItem.mac_address || '-'}</code>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-slate-50 dark:bg-slate-700/50 p-4 rounded-lg">
-                  <p className="text-sm text-slate-500 dark:text-slate-400">Sucursal</p>
-                  <p className="font-medium">{selectedItem.branch_name || '-'}</p>
-                </div>
-                <div className="bg-slate-50 dark:bg-slate-700/50 p-4 rounded-lg">
-                  <p className="text-sm text-slate-500 dark:text-slate-400">Fecha de Compra</p>
-                  <p>{selectedItem.purchase_date ? new Date(selectedItem.purchase_date).toLocaleDateString() : '-'}</p>
-                </div>
-              </div>
-
-              {/* Especificaciones personalizadas */}
-              {selectedItem.specs && selectedItem.specs.length > 0 && (
-                <div>
-                  <h3 className="text-lg font-semibold text-slate-800 dark:text-white mb-3">Especificaciones</h3>
-                  <div className="bg-slate-50 dark:bg-slate-700/50 rounded-lg overflow-hidden">
-                    {selectedItem.specs.map((spec, idx) => (
-                      <div key={idx} className="flex justify-between p-3 border-b border-slate-200 dark:border-slate-600 last:border-0">
-                        <span className="text-sm capitalize">{spec.spec_key}:</span>
-                        <span className="text-sm font-medium">{spec.spec_value}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Notas */}
-              {selectedItem.notes && (
-                <div>
-                  <h3 className="text-lg font-semibold text-slate-800 dark:text-white mb-3">Notas</h3>
-                  <div className="bg-slate-50 dark:bg-slate-700/50 p-4 rounded-lg">
-                    <p className="text-sm whitespace-pre-wrap">{selectedItem.notes}</p>
-                  </div>
-                </div>
-              )}
-
-              {/* Botones de acción */}
-              <div className="flex gap-3 pt-4 border-t border-slate-200 dark:border-slate-700">
-                <button
-                  onClick={() => {
-                    setEditingItem(selectedItem);
-                    setFormData({...selectedItem, specs: selectedItem.specs || []});
-                    setSelectedItem(null);
-                    setShowForm(true);
-                  }}
-                  className="btn-secondary flex-1 py-3 text-base"
-                >
-                  <Edit size={18} className="inline mr-2" />
-                  Editar
-                </button>
-                <button
-                  onClick={() => handleDelete(selectedItem.id)}
-                  className="bg-red-600 hover:bg-red-700 text-white px-4 py-3 rounded-lg flex-1 text-base font-medium"
-                >
-                  <TrashIcon size={18} className="inline mr-2" />
-                  Eliminar
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <section className="space-y-3"><div className="flex items-center justify-between gap-3"><div><h2 className="text-sm font-semibold text-slate-900 dark:text-white">{selectedCategory === 'all' ? 'Todos los equipos' : selectedCategory}</h2><p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{filteredHardware.length} {filteredHardware.length === 1 ? 'equipo encontrado' : 'equipos encontrados'}</p></div><button type="button" onClick={loadData} disabled={loading} title="Actualizar inventario" className={cn(secondaryButton, 'px-2.5 py-2 text-xs')}><RefreshCw size={14} className={loading ? 'animate-spin' : ''} />Actualizar</button></div>
+        {loading ? <div className="flex min-h-64 flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-white/50 dark:border-white/10 dark:bg-[#111827]/40"><Loader2 size={25} className="animate-spin text-emerald-500" /><p className="mt-3 text-sm font-medium text-slate-600 dark:text-slate-300">Cargando inventario...</p><p className="mt-1 text-xs text-slate-400">Consultando activos y sedes</p></div>
+          : filteredHardware.length === 0 ? <div className="flex min-h-64 flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-white/50 px-5 text-center dark:border-white/10 dark:bg-[#111827]/40"><span className="flex h-12 w-12 items-center justify-center rounded-xl border border-emerald-500/15 bg-emerald-500/10 text-emerald-500"><Search size={21} /></span><h3 className="mt-4 text-sm font-semibold text-slate-900 dark:text-white">No hay equipos para mostrar</h3><p className="mt-1 max-w-sm text-xs leading-5 text-slate-500 dark:text-slate-400">Prueba con otra búsqueda o limpia los filtros. También puedes registrar un equipo nuevo.</p><button type="button" onClick={() => openCreateForm(selectedCategory !== 'all' ? selectedCategory : '')} className={cn(primaryButton, 'mt-4')}><Plus size={15} />Agregar equipo</button></div>
+          : viewMode === 'grid' ? <div className="grid grid-cols-1 gap-3 md:grid-cols-2 2xl:grid-cols-3">{filteredHardware.map((item) => <EquipmentCard key={item.id} item={item} />)}</div>
+          : <div className="overflow-hidden rounded-xl border border-slate-200/80 bg-white/90 dark:border-white/[0.07] dark:bg-[#111827]/90"><div className="overflow-x-auto"><table className="w-full min-w-[780px] border-collapse text-left"><thead className="bg-slate-50 text-[10px] uppercase tracking-[0.13em] text-slate-500 dark:bg-white/[0.025] dark:text-slate-500"><tr><th className="px-4 py-3 font-bold">Equipo</th><th className="px-4 py-3 font-bold">Serial / etiqueta</th><th className="px-4 py-3 font-bold">Sede</th><th className="px-4 py-3 font-bold">Estado</th><th className="px-4 py-3 text-right font-bold">Acciones</th></tr></thead><tbody>{filteredHardware.map((item) => { const category = categoryFor(item); const Icon = category.icon || Package; return <tr key={item.id} className="border-t border-slate-200/70 transition hover:bg-slate-50/80 dark:border-white/[0.05] dark:hover:bg-white/[0.025]"><td className="px-4 py-3"><div className="flex items-center gap-3"><IconTile category={category} size="small" /><div className="min-w-0"><p className="max-w-xs truncate text-sm font-semibold text-slate-800 dark:text-slate-100">{item.brand_model || 'Equipo sin modelo'}</p><p className="mt-0.5 text-[11px] text-slate-500">{item.type}</p></div></div></td><td className="px-4 py-3"><p className="font-mono text-xs text-slate-600 dark:text-slate-300">{item.serial_number || '—'}</p><p className="mt-0.5 text-[11px] text-slate-400">{item.service_tag || 'Sin etiqueta'}</p></td><td className="px-4 py-3 text-xs text-slate-600 dark:text-slate-300">{item.branch_name || 'Sin asignar'}</td><td className="px-4 py-3"><StatusBadge status={item.status} /></td><td className="px-4 py-3"><div className="flex justify-end gap-1"><button type="button" onClick={() => setSelectedItem(item)} className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-emerald-600 dark:hover:bg-white/[0.07] dark:hover:text-emerald-400" title="Detalles"><Eye size={15} /></button><button type="button" onClick={() => openEditForm(item)} className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-blue-600 dark:hover:bg-white/[0.07] dark:hover:text-blue-400" title="Editar"><Edit3 size={15} /></button><button type="button" onClick={() => handleDelete(item)} disabled={deletingId === item.id} className="rounded-lg p-2 text-slate-500 hover:bg-rose-500/10 hover:text-rose-500 disabled:opacity-50" title="Eliminar"><Trash2 size={15} /></button></div></td></tr>; })}</tbody></table></div></div>}
+      </section>
+      <footer className="flex flex-col gap-1 border-t border-slate-200/70 pt-4 text-[10px] text-slate-400 dark:border-white/[0.06] dark:text-slate-600 sm:flex-row sm:items-center sm:justify-between"><span>IT SUPPORT PLATFORM <span className="px-1.5">/</span> GESTIÓN DE ACTIVOS</span><span>Inventario actualizado desde el sistema central</span></footer>
     </div>
-  );
+
+    {showCategoryForm && <ModalShell title="Nueva categoría" subtitle="Personaliza cómo se agrupan tus activos." icon={Tag} onClose={() => setShowCategoryForm(false)} size="max-w-lg"><form onSubmit={handleAddCategory} className="space-y-5 p-5 sm:p-6"><Field label="Nombre de la categoría"><input autoFocus required maxLength={50} value={newCategory.name} onChange={(event) => setNewCategory((current) => ({ ...current, name: event.target.value }))} placeholder="Ej. Tabletas, UPS, Cámaras..." className={inputClass} /></Field><Field label="Icono"><div className="grid grid-cols-6 gap-2 sm:grid-cols-8">{Object.entries(AVAILABLE_ICONS).map(([name, Icon]) => <button key={name} type="button" onClick={() => setNewCategory((current) => ({ ...current, icon: name }))} title={name} className={cn('flex h-10 items-center justify-center rounded-lg border transition', newCategory.icon === name ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-500 ring-1 ring-emerald-500/20' : 'border-slate-200 text-slate-500 hover:border-slate-300 dark:border-white/[0.08] dark:text-slate-400 dark:hover:border-white/20')}><Icon size={17} /></button>)}</div></Field><Field label="Color de identificación"><div className="flex flex-wrap gap-2">{CATEGORY_COLORS.map((color) => <button key={color.value} type="button" title={color.label} onClick={() => setNewCategory((current) => ({ ...current, color: color.value }))} className={cn('h-8 w-8 rounded-full border-2 bg-gradient-to-br transition', color.value, newCategory.color === color.value ? 'border-slate-900 ring-2 ring-emerald-500/50 ring-offset-2 ring-offset-white dark:border-white dark:ring-offset-[#0F172A]' : 'border-transparent')} />)}</div></Field>{actionError && <p className="flex items-center gap-2 text-xs text-rose-500"><AlertCircle size={14} />{actionError}</p>}<div className="flex flex-col-reverse gap-2 border-t border-slate-200 pt-4 dark:border-white/[0.07] sm:flex-row sm:justify-end"><button type="button" onClick={() => setShowCategoryForm(false)} className={secondaryButton}>Cancelar</button><button type="submit" className={primaryButton}><Plus size={15} />Crear categoría</button></div></form></ModalShell>}
+
+    {showForm && <ModalShell title={editingItem ? 'Editar equipo' : 'Registrar equipo'} subtitle={editingItem ? 'Actualiza los datos del activo seleccionado.' : 'Añade un activo al inventario de IT.'} icon={editingItem ? Edit3 : Plus} onClose={() => { setShowForm(false); setEditingItem(null); setActionError(''); }} size="max-w-3xl"><form onSubmit={handleSubmit} className="max-h-[calc(100dvh-7rem)] overflow-y-auto"><div className="space-y-5 p-5 sm:p-6"><div><h3 className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.13em] text-slate-500"><ClipboardList size={14} className="text-emerald-500" />Información general</h3><div className="grid grid-cols-1 gap-4 sm:grid-cols-2"><Field label="Categoría *"><select required value={formData.type} onChange={(event) => handleTypeChange(event.target.value)} disabled={Boolean(editingItem)} className={cn(inputClass, 'disabled:cursor-not-allowed disabled:opacity-60')}><option value="">Selecciona una categoría</option>{categories.map((category) => <option key={category.name} value={category.name}>{category.name}</option>)}</select></Field><Field label="Marca / modelo *"><input required value={formData.brand_model || ''} onChange={(event) => setFormData((current) => ({ ...current, brand_model: event.target.value }))} placeholder="Ej. Dell OptiPlex 7090" className={inputClass} /></Field><Field label="Número de serie"><input value={formData.serial_number || ''} onChange={(event) => setFormData((current) => ({ ...current, serial_number: event.target.value }))} placeholder="Serial del fabricante" className={inputClass} /></Field><Field label="Etiqueta de servicio"><input value={formData.service_tag || ''} onChange={(event) => setFormData((current) => ({ ...current, service_tag: event.target.value }))} placeholder="Service tag / código interno" className={inputClass} /></Field><Field label="Sede asignada"><select value={formData.branch_id ?? ''} onChange={(event) => setFormData((current) => ({ ...current, branch_id: event.target.value }))} className={inputClass}><option value="">Sin asignar</option>{branches.map((branch) => <option key={branch.id} value={String(branch.id)}>{branch.name}</option>)}</select></Field><Field label="Estado"><select value={formData.status || 'active'} onChange={(event) => setFormData((current) => ({ ...current, status: event.target.value }))} className={inputClass}><option value="active">Operativo</option><option value="repair">En reparación</option><option value="damaged">Dañado</option></select></Field></div></div>
+        <div><h3 className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.13em] text-slate-500"><Network size={14} className="text-emerald-500" />Conectividad</h3><div className="grid grid-cols-1 gap-4 sm:grid-cols-2"><Field label="Dirección IP"><input value={formData.ip_address || ''} onChange={(event) => setFormData((current) => ({ ...current, ip_address: event.target.value }))} placeholder="192.168.1.100" className={inputClass} /></Field><Field label="Dirección MAC"><input value={formData.mac_address || ''} onChange={(event) => setFormData((current) => ({ ...current, mac_address: event.target.value }))} placeholder="00:1A:2B:3C:4D:5E" className={inputClass} /></Field></div></div>
+        <div><div className="mb-3 flex items-center justify-between gap-3"><h3 className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.13em] text-slate-500"><Cpu size={14} className="text-emerald-500" />Especificaciones técnicas</h3><button type="button" onClick={addSpec} className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-600 hover:text-emerald-500 dark:text-emerald-400"><Plus size={13} />Añadir campo</button></div>{!formData.type ? <p className="rounded-lg border border-dashed border-slate-300 px-3 py-4 text-xs text-slate-500 dark:border-white/10">Selecciona una categoría para configurar sus especificaciones.</p> : formData.specs.length === 0 ? <p className="rounded-lg border border-dashed border-slate-300 px-3 py-4 text-xs text-slate-500 dark:border-white/10">No hay especificaciones definidas. Puedes añadir campos personalizados.</p> : <div className="space-y-2">{formData.specs.map((spec, index) => <div key={`${spec.key}-${index}`} className="grid grid-cols-1 items-end gap-2 rounded-lg border border-slate-200/80 bg-slate-50/60 p-3 dark:border-white/[0.06] dark:bg-white/[0.02] sm:grid-cols-[minmax(0,0.8fr)_minmax(0,1fr)_auto]">{String(spec.key).startsWith('custom_') ? <Field label="Nombre del campo"><input value={spec.label || ''} onChange={(event) => renameSpec(index, event.target.value)} placeholder="Ej. Capacidad" className={inputClass} /></Field> : <div className="pb-2"><p className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">{spec.label || spec.key}</p><p className="mt-1 truncate text-xs font-medium text-slate-700 dark:text-slate-200">{spec.label || spec.key}</p></div>}{spec.type === 'select' && Array.isArray(spec.options) ? <Field label="Valor"><select value={spec.value ?? ''} onChange={(event) => updateSpec(index, event.target.value)} className={inputClass}><option value="">Seleccionar...</option>{spec.options.map((option) => <option key={option} value={option}>{option}</option>)}</select></Field> : spec.type === 'boolean' ? <Field label="Valor"><select value={String(spec.value ?? '')} onChange={(event) => updateSpec(index, event.target.value)} className={inputClass}><option value="">Sin definir</option><option value="true">Sí</option><option value="false">No</option></select></Field> : <Field label="Valor"><input value={spec.value ?? ''} onChange={(event) => updateSpec(index, event.target.value)} placeholder="Introducir valor" className={inputClass} /></Field>}<button type="button" onClick={() => removeSpec(index)} title="Quitar especificación" className="mb-0.5 rounded-lg p-2 text-slate-400 transition hover:bg-rose-500/10 hover:text-rose-500"><Trash2 size={15} /></button></div>)}</div>}</div>
+        <div><h3 className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.13em] text-slate-500"><CalendarDays size={14} className="text-emerald-500" />Compra y garantía</h3><div className="grid grid-cols-1 gap-4 sm:grid-cols-2"><Field label="Fecha de compra"><input type="date" value={formData.purchase_date || ''} onChange={(event) => setFormData((current) => ({ ...current, purchase_date: event.target.value }))} className={inputClass} /></Field><Field label="Fin de garantía"><input type="date" value={formData.warranty_end || ''} onChange={(event) => setFormData((current) => ({ ...current, warranty_end: event.target.value }))} className={inputClass} /></Field></div></div>
+        <Field label="Notas / observaciones"><textarea rows={3} value={formData.notes || ''} onChange={(event) => setFormData((current) => ({ ...current, notes: event.target.value }))} placeholder="Detalles adicionales, ubicación física, incidencias..." className={cn(inputClass, 'resize-y')} /></Field>
+        {actionError && <p className="flex items-start gap-2 rounded-lg border border-rose-500/20 bg-rose-500/[0.06] p-3 text-xs text-rose-500"><AlertCircle size={15} className="mt-0.5 shrink-0" />{actionError}</p>}
+      </div><div className="sticky bottom-0 flex flex-col-reverse gap-2 border-t border-slate-200 bg-white/95 px-5 py-4 backdrop-blur-sm dark:border-white/[0.07] dark:bg-[#0F172A]/95 sm:flex-row sm:justify-end sm:px-6"><button type="button" onClick={() => { setShowForm(false); setEditingItem(null); }} className={secondaryButton}>Cancelar</button><button type="submit" disabled={saving} className={primaryButton}>{saving ? <Loader2 size={15} className="animate-spin" /> : <Check size={15} />}{saving ? 'Guardando...' : editingItem ? 'Guardar cambios' : 'Registrar equipo'}</button></div></form></ModalShell>}
+
+    {selectedItem && (() => { const item = selectedItem; const category = categoryFor(item); const Icon = category.icon || Package; const specs = Array.isArray(item.specs) ? item.specs : []; return <ModalShell title="Ficha del equipo" subtitle="Información detallada del activo." icon={Icon} onClose={() => setSelectedItem(null)} size="max-w-2xl"><div className="max-h-[calc(100dvh-8rem)] space-y-5 overflow-y-auto p-5 sm:p-6"><div className="flex flex-col gap-4 rounded-xl border border-slate-200 bg-slate-50/80 p-4 dark:border-white/[0.06] dark:bg-white/[0.025] sm:flex-row sm:items-center"><IconTile category={category} /><div className="min-w-0 flex-1"><p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">{item.type}</p><h3 className="mt-1 break-words text-lg font-semibold text-slate-900 dark:text-white">{item.brand_model || 'Equipo sin modelo'}</h3><div className="mt-2"><StatusBadge status={item.status} /></div></div><button type="button" onClick={() => { setSelectedItem(null); openEditForm(item); }} className={secondaryButton}><Edit3 size={14} />Editar</button></div>
+        <div><h3 className="mb-3 text-xs font-bold uppercase tracking-[0.13em] text-slate-500">Identificación y ubicación</h3><div className="grid grid-cols-1 gap-3 sm:grid-cols-2">{[{ label: 'Número de serie', value: item.serial_number }, { label: 'Etiqueta de servicio', value: item.service_tag }, { label: 'Sede', value: item.branch_name }, { label: 'Dirección IP', value: item.ip_address }, { label: 'Dirección MAC', value: item.mac_address }, { label: 'Fecha de compra', value: formatDate(item.purchase_date) }, { label: 'Fin de garantía', value: formatDate(item.warranty_end) }].map((field) => <div key={field.label} className="min-w-0 rounded-lg border border-slate-200/80 px-3 py-2.5 dark:border-white/[0.06]"><p className="text-[10px] font-semibold text-slate-500">{field.label}</p><p className="mt-1 break-words text-sm text-slate-800 dark:text-slate-200">{field.value || '—'}</p></div>)}</div></div>
+        {specs.length > 0 && <div><h3 className="mb-3 text-xs font-bold uppercase tracking-[0.13em] text-slate-500">Especificaciones técnicas</h3><div className="grid grid-cols-1 gap-2 sm:grid-cols-2">{specs.map((spec, index) => <div key={`${spec.key || spec.spec_key || index}`} className="rounded-lg border border-slate-200/80 px-3 py-2.5 dark:border-white/[0.06]"><p className="text-[10px] font-semibold text-slate-500">{spec.label || spec.key || spec.spec_key || 'Especificación'}</p><p className="mt-1 break-words text-sm text-slate-800 dark:text-slate-200">{spec.value ?? spec.spec_value ?? '—'}</p></div>)}</div></div>}
+        {item.notes && <div><h3 className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.13em] text-slate-500"><FileText size={14} />Notas</h3><p className="whitespace-pre-wrap break-words rounded-lg border border-slate-200/80 p-3 text-sm leading-6 text-slate-700 dark:border-white/[0.06] dark:text-slate-300">{item.notes}</p></div>}
+        <div className="flex flex-col-reverse gap-2 border-t border-slate-200 pt-4 dark:border-white/[0.07] sm:flex-row sm:justify-between"><button type="button" onClick={() => handleDelete(item)} disabled={deletingId === item.id} className="inline-flex items-center justify-center gap-2 rounded-lg border border-rose-500/20 px-3 py-2.5 text-sm font-medium text-rose-500 transition hover:bg-rose-500/10 disabled:opacity-50"><Trash2 size={15} />{deletingId === item.id ? 'Eliminando...' : 'Eliminar equipo'}</button><button type="button" onClick={() => setSelectedItem(null)} className={secondaryButton}>Cerrar ficha</button></div>
+      </div></ModalShell>; })()}
+  </div>;
 }

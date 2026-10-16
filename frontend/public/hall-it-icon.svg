@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><defs>
+  <linearGradient id="hallit-blue" x1="8" y1="5" x2="42" y2="57" gradientUnits="userSpaceOnUse"><stop stop-color="#22D3EE"/><stop offset="0.52" stop-color="#168BFF"/><stop offset="1" stop-color="#3730FF"/></linearGradient>
+  <linearGradient id="hallit-violet" x1="38" y1="5" x2="58" y2="58" gradientUnits="userSpaceOnUse"><stop stop-color="#C026D3"/><stop offset="0.55" stop-color="#7C3AED"/><stop offset="1" stop-color="#4F46E5"/></linearGradient>
+</defs>
+<path d="M9 17.5C9 16.4 9.6 15.4 10.6 14.8L25.2 6.4V25.5L9 34.8V17.5Z" fill="url(#hallit-blue)"/>
+<path d="M9 34.8L25.2 25.5V57.7L10.6 49.2C9.6 48.6 9 47.6 9 46.5V34.8Z" fill="url(#hallit-violet)"/>
+<path d="M39 6.4L53.4 14.8C54.4 15.4 55 16.4 55 17.5V34.8L39 25.5V6.4Z" fill="url(#hallit-violet)"/>
+<path d="M39 25.5L55 34.8V46.5C55 47.6 54.4 48.6 53.4 49.2L39 57.7V25.5Z" fill="url(#hallit-blue)"/>
+<path d="M25.2 25.5L39 33.5V47.1L25.2 39.1V25.5Z" fill="#168BFF"/>
+<path d="M25.2 25.5L39 33.5V39.8L25.2 31.8V25.5Z" fill="#22D3EE"/></svg>

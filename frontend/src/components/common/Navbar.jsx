@@ -2,9 +2,10 @@ import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
+import HallITLogo from './HallITLogo';
 import {
   Home, Key, CheckSquare, Server, Calendar, Wifi, Code, Building2,
-  LogOut, Menu, X, Sun, Moon, Shield, ArrowLeft
+  LogOut, Menu, X, Sun, Moon, ArrowLeft
 } from 'lucide-react';
 
 const navItems = [
@@ -52,16 +53,13 @@ export default function Navbar() {
                 className="flex items-center gap-2.5 min-w-0 cursor-pointer"
                 onClick={() => navigate('/')}
               >
-                <div className="relative shrink-0">
-                  <Shield className="w-6 h-6 text-indigo-500" />
-                  <span className="absolute -inset-1 rounded-full bg-indigo-500/10 blur-md" />
-                </div>
+                <HallITLogo size={34} className="shrink-0 drop-shadow-[0_0_10px_rgba(59,130,246,0.18)]" />
                 <div className="min-w-0 leading-tight">
-                  <div className={`text-base font-bold truncate ${darkMode ? 'text-white' : 'text-slate-800'}`}>
-                    Centro de Mando IT
+                  <div className={`text-base font-bold tracking-tight truncate ${darkMode ? 'text-white' : 'text-slate-900'}`}>
+                    Hall-<span className="bg-gradient-to-r from-cyan-400 via-blue-500 to-violet-500 bg-clip-text text-transparent">IT</span>
                   </div>
-                  <div className={`text-[10px] truncate ${darkMode ? 'text-slate-500' : 'text-slate-500'}`}>
-                    Gestión de tareas y tickets
+                  <div className={`text-[10px] uppercase tracking-[0.12em] truncate ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                    IT Support Platform
                   </div>
                 </div>
               </div>
@@ -136,9 +134,11 @@ export default function Navbar() {
             >
               <ArrowLeft size={18} />
             </button>
-            <div className="flex items-center gap-1 cursor-pointer" onClick={() => navigate('/')}>
-              <Shield className="w-6 h-6 text-indigo-500" />
-              <span className={`text-base font-bold ${darkMode ? 'text-white' : 'text-slate-800'}`}>IT Support</span>
+            <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/')}>
+              <HallITLogo size={30} />
+              <span className={`text-base font-bold tracking-tight ${darkMode ? 'text-white' : 'text-slate-900'}`}>
+                Hall-<span className="bg-gradient-to-r from-cyan-400 via-blue-500 to-violet-500 bg-clip-text text-transparent">IT</span>
+              </span>
             </div>
           </div>
 
