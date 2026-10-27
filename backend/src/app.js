@@ -10,6 +10,8 @@ import hardwareRoutes from './routes/hardwareRoutes.js';
 import vaultRoutes from './routes/vaultRoutes.js';
 import exportRoutes from './routes/exportRoutes.js';
 import remoteAccessRoutes from './routes/remoteAccessRoutes.js';
+import maintenanceRoutes from './routes/maintenanceRoutes.js';
+import snippetRoutes from './routes/snippetRoutes.js';
 
 dotenv.config();
 
@@ -33,6 +35,8 @@ app.use('/api/hardware', hardwareRoutes);
 app.use('/api/vault', vaultRoutes);
 app.use('/api/export', exportRoutes);
 app.use('/api/remote-access', remoteAccessRoutes);
+app.use('/api/maintenance', maintenanceRoutes);
+app.use('/api/snippets', snippetRoutes);
 
 // Ruta de prueba
 app.get('/api/health', (req, res) => {
