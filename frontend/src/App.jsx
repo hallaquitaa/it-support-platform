@@ -26,6 +26,8 @@ import InventoryPage from './pages/InventoryPage';
 import VaultPage from './pages/VaultPage';
 import RemoteAccessPage from './pages/RemoteAccessPage';
 import ProfilePage from './pages/ProfilePage';
+import MaintenancePage from './pages/MaintenancePage';
+import SnippetsPage from './pages/SnippetsPage';
 
 import taskService from './services/taskService';
 
@@ -656,9 +658,7 @@ function App() {
               path="/maintenance"
               element={
                 <ProtectedRouteWithNavbar>
-                  <div className="p-8 text-slate-500 dark:text-slate-400">
-                    Módulo Mantenimiento - Próximamente
-                  </div>
+                  <MaintenancePage />
                 </ProtectedRouteWithNavbar>
               }
             />
@@ -685,9 +685,7 @@ function App() {
               path="/snippets"
               element={
                 <ProtectedRouteWithNavbar>
-                  <div className="p-8 text-slate-500 dark:text-slate-400">
-                    Módulo Snippets - Próximamente
-                  </div>
+                  <SnippetsPage />
                 </ProtectedRouteWithNavbar>
               }
             />
