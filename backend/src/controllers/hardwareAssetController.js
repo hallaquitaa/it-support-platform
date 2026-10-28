@@ -9,19 +9,21 @@ async function requireHardware(db, id) {
 export const getHardwareAssetOverview = async (req, res) => {
   try {
     const db = await openDb();
-    const [total, warranties, loans, components, audits] = await Promise.all([
+    const [total, warranties, loans, components, audits, obsolete] = await Promise.all([
       db.get('SELECT COUNT(*) AS total FROM hardware'),
       db.get("SELECT COUNT(*) AS total FROM hardware h LEFT JOIN hardware_asset_details d ON d.hardware_id = h.id WHERE h.warranty_end IS NOT NULL AND date(h.warranty_end) BETWEEN date('now') AND date('now', '+30 day')"),
       db.get("SELECT COUNT(*) AS total FROM hardware_loans WHERE status = 'active' AND date(due_date) < date('now')"),
       db.get("SELECT COUNT(*) AS total FROM hardware_components WHERE status = 'installed'"),
-      db.get("SELECT COUNT(*) AS total FROM hardware h LEFT JOIN hardware_asset_details d ON d.hardware_id = h.id WHERE d.last_audit_date IS NULL OR date(d.last_audit_date) < date('now', '-180 day')")
+      db.get("SELECT COUNT(*) AS total FROM hardware h LEFT JOIN hardware_asset_details d ON d.hardware_id = h.id WHERE d.last_audit_date IS NULL OR date(d.last_audit_date) < date('now', '-180 day')"),
+      db.get("SELECT COUNT(*) AS total FROM hardware h LEFT JOIN hardware_asset_details d ON d.hardware_id = h.id WHERE h.purchase_date IS NOT NULL AND date(h.purchase_date, '+' || COALESCE(d.useful_life_years, 5) || ' years') < date('now')")
     ]);
     res.json({
       total: total?.total || 0,
       warrantiesExpiring: warranties?.total || 0,
       overdueLoans: loans?.total || 0,
       installedComponents: components?.total || 0,
-      auditDue: audits?.total || 0
+      auditDue: audits?.total || 0,
+      obsolete: obsolete?.total || 0
     });
   } catch (error) {
     res.status(500).json({ error: 'No se pudo cargar el resumen avanzado del inventario.' });
