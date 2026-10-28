@@ -13,8 +13,8 @@ const emptyForm = { hardware_id: '', title: '', scheduled_date: '', type: 'preve
 const emptyLogForm = { hardware_id: '', scheduled_maintenance_id: '', description: '' };
 
 const surface = (darkMode) => darkMode
-  ? 'border-gray-700/70 bg-[#111827]/75 shadow-black/10'
-  : 'border-gray-200/90 bg-white/75 shadow-gray-300/20';
+  ? 'border-white/[0.08] bg-[#111827]/[0.78] shadow-black/20'
+  : 'border-slate-200/70 bg-white/[0.76] shadow-slate-300/10';
 
 const mutedText = (darkMode) => darkMode ? 'text-gray-400' : 'text-gray-500';
 
