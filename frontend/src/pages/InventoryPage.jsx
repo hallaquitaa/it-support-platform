@@ -12,6 +12,7 @@ import {
 import hardwareService from '../services/hardwareService';
 import branchService from '../services/branchService';
 import InventoryAdvancedPanel from '../components/inventory/InventoryAdvancedPanel';
+import AuraPageBackground from '../components/common/AuraPageBackground';
 
 const DEFAULT_CATEGORIES = [
   { name: 'Fiscal Printer', icon: Printer, color: 'from-emerald-500 to-teal-400', bgColor: 'bg-emerald-500/10', borderColor: 'border-emerald-500/20', defaultSpecs: [{ key: 'connection', label: 'Conexión', type: 'select', options: ['USB', 'Ethernet', 'Serial', 'Wi-Fi'] }, { key: 'paper_width', label: 'Ancho de papel', type: 'select', options: ['57 mm', '80 mm'] }] },
@@ -87,9 +88,9 @@ function StatCard({ label, value, detail, icon: Icon, accent = 'emerald' }) {
 }
 
 function ModalShell({ title, subtitle, icon: Icon = Package, onClose, children, size = 'max-w-2xl' }) {
-  return <div className="fixed inset-0 z-[90] flex items-center justify-center overflow-y-auto bg-slate-950/70 p-3 backdrop-blur-sm sm:p-6" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
-    <section role="dialog" aria-modal="true" className={cn('my-auto w-full overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl shadow-black/30 dark:border-white/10 dark:bg-[#0F172A]', size)}>
-      <header className="flex items-start justify-between gap-4 border-b border-slate-200 px-5 py-4 dark:border-white/[0.07] sm:px-6"><div className="flex min-w-0 items-center gap-3"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-emerald-500/20 bg-emerald-500/10 text-emerald-500"><Icon size={19} /></span><div className="min-w-0"><h2 className="truncate text-base font-semibold text-slate-900 dark:text-white">{title}</h2>{subtitle && <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{subtitle}</p>}</div></div><button type="button" onClick={onClose} aria-label="Cerrar" className="rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-white/[0.07] dark:hover:text-white"><X size={18} /></button></header>
+  return <div className="fixed inset-0 z-[90] flex items-center justify-center overflow-y-auto bg-slate-950/20 p-3 backdrop-blur-xl sm:p-6" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
+    <section role="dialog" aria-modal="true" className={cn('my-auto w-full overflow-hidden rounded-2xl border shadow-2xl backdrop-blur-xl bg-white/96 border-slate-200 shadow-slate-300/30 dark:border-white/[0.09] dark:bg-[#111827]/98 dark:shadow-black/40', size)}>
+      <header className="flex items-start justify-between gap-4 border-b border-slate-200/80 px-5 py-4 dark:border-white/[0.07] sm:px-6"><div className="flex min-w-0 items-center gap-3"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-indigo-500/20 bg-indigo-500/10 text-indigo-600 dark:text-indigo-300"><Icon size={19} /></span><div className="min-w-0"><h2 className="truncate text-base font-semibold text-slate-900 dark:text-white">{title}</h2>{subtitle && <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{subtitle}</p>}</div></div><button type="button" onClick={onClose} aria-label="Cerrar" className="rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-white/[0.07] dark:hover:text-white"><X size={18} /></button></header>
       {children}
     </section>
   </div>;
@@ -99,9 +100,9 @@ function Field({ label, children, className = '' }) {
   return <label className={cn('block min-w-0 space-y-1.5', className)}><span className="text-[11px] font-semibold text-slate-600 dark:text-slate-400">{label}</span>{children}</label>;
 }
 
-const inputClass = 'w-full rounded-lg border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-emerald-500/60 focus:ring-2 focus:ring-emerald-500/10 dark:border-white/[0.09] dark:bg-[#0A0E17] dark:text-slate-100 dark:placeholder:text-slate-600';
-const primaryButton = 'inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-500 px-3.5 py-2.5 text-sm font-semibold text-slate-950 shadow-sm shadow-emerald-950/20 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-50';
-const secondaryButton = 'inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-300 dark:hover:bg-white/[0.07]';
+const inputClass = 'w-full rounded-xl border border-slate-200 bg-white/80 px-3 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-400/70 focus:ring-2 focus:ring-indigo-500/10 dark:border-white/[0.09] dark:bg-[#0A0E17]/80 dark:text-slate-100 dark:placeholder:text-slate-600';
+const primaryButton = 'inline-flex items-center justify-center gap-2 rounded-xl border border-indigo-500/20 bg-indigo-500 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm shadow-indigo-950/20 transition hover:bg-indigo-400 disabled:cursor-not-allowed disabled:opacity-50';
+const secondaryButton = 'inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200/80 bg-white/75 px-3 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-indigo-300 hover:bg-indigo-50/70 dark:border-white/[0.09] dark:bg-white/[0.035] dark:text-slate-200 dark:hover:bg-white/[0.07]';
 
 export default function InventoryPage() {
   const [hardware, setHardware] = useState([]);
@@ -307,9 +308,9 @@ export default function InventoryPage() {
     </article>;
   };
 
-  return <div className="relative min-h-full overflow-hidden bg-slate-50 text-slate-900 dark:bg-[#0A0E17] dark:text-slate-100">
-    <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden"><div className="absolute -right-32 top-24 h-96 w-96 rounded-full bg-emerald-500/[0.045] blur-3xl dark:bg-emerald-500/[0.055]" /><div className="absolute -left-36 top-[28rem] h-80 w-80 rounded-full bg-blue-500/[0.035] blur-3xl dark:bg-blue-500/[0.045]" /></div>
-    <div className="relative mx-auto w-full max-w-[1600px] space-y-5 p-4 sm:p-6 xl:p-8">
+  return <div className="relative isolate min-h-[calc(100vh-64px)] overflow-hidden bg-[#F5F7FC] text-slate-900 transition-colors duration-300 dark:bg-[#080D18] dark:text-slate-100">
+    <AuraPageBackground />
+    <div className="relative z-10 mx-auto w-full max-w-[1600px] space-y-5 p-4 sm:p-6 xl:p-8">
       <header className="flex flex-col justify-between gap-4 border-b border-slate-200/80 pb-5 dark:border-white/[0.07] md:flex-row md:items-center"><div className="min-w-0"><div className="mb-2 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.19em] text-slate-400 dark:text-slate-500"><span>IT SUPPORT PLATFORM</span><ChevronRight size={12} /><span className="text-emerald-600 dark:text-emerald-400">Inventario</span></div><div className="flex items-center gap-3"><span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-emerald-500/20 bg-emerald-500/10 text-emerald-500"><Package size={22} strokeWidth={1.7} /></span><div><h1 className="text-2xl font-bold tracking-tight text-slate-950 dark:text-white sm:text-[28px]">Inventario de equipos</h1><p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Control centralizado de activos, sedes y especificaciones técnicas.</p></div></div></div><div className="flex flex-wrap items-center gap-2"><button type="button" onClick={() => setShowAdvancedPanel((value) => !value)} className={secondaryButton}><Activity size={15} />{showAdvancedPanel ? 'Ocultar gestión avanzada' : 'Gestión avanzada'}</button><button type="button" onClick={() => { setActionError(''); setShowCategoryForm(true); }} className={secondaryButton}><Plus size={15} />Categoría</button><button type="button" onClick={() => openCreateForm(selectedCategory !== 'all' ? selectedCategory : '')} className={primaryButton}><Plus size={16} />Agregar equipo</button></div></header>
 
       {pageError && <div className="flex flex-col gap-3 rounded-xl border border-rose-500/20 bg-rose-500/[0.06] p-4 text-sm text-rose-600 dark:text-rose-300 sm:flex-row sm:items-center sm:justify-between"><div className="flex items-center gap-2"><AlertCircle size={17} /><span>No se pudo cargar el inventario: {pageError}</span></div><button onClick={loadData} className={secondaryButton}><RefreshCw size={14} />Reintentar</button></div>}
