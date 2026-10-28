@@ -154,12 +154,13 @@ export default function InventoryAdvancedPanel({ hardware = [], branches = [], o
       <div className="flex flex-wrap gap-2"><button type="button" className={button} onClick={exportCsv}><Download size={14} />Exportar CSV</button><button type="button" className={button} onClick={() => { loadOverview(); loadAsset(); }}><RefreshCw size={14} />Actualizar</button></div>
     </div>
 
-    <div className="grid grid-cols-2 gap-2 xl:grid-cols-5">
+    <div className="grid grid-cols-2 gap-2 xl:grid-cols-6">
       <Metric icon={Package} title="Activos" value={overview?.total ?? hardware.length} hint="Equipos registrados" />
       <Metric icon={CalendarClock} title="Garantías" value={overview?.warrantiesExpiring ?? '—'} hint="Vencen en 30 días" />
       <Metric icon={Clock3} title="Préstamos vencidos" value={overview?.overdueLoans ?? '—'} hint="Pendientes de devolución" />
       <Metric icon={Cpu} title="Componentes" value={overview?.installedComponents ?? '—'} hint="Instalados actualmente" />
       <Metric icon={ClipboardCheck} title="Auditorías" value={overview?.auditDue ?? '—'} hint="Sin verificar en 180 días" />
+      <Metric icon={Laptop} title="Obsolescencia" value={overview?.obsolete ?? '—'} hint="Vida útil estimada superada" />
     </div>
 
     {duplicateCount > 0 && <div className="flex items-start gap-2 rounded-xl border border-amber-500/20 bg-amber-500/[0.06] p-3 text-xs text-amber-700 dark:text-amber-300"><AlertTriangle size={15} className="mt-0.5 shrink-0" /><span>Se detectaron {duplicateCount} grupos de posibles duplicados entre seriales, etiquetas, service tags, MAC o IP. Revísalos antes de importar más equipos.</span></div>}
