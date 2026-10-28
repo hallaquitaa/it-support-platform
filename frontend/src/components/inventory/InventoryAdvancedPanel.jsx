@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Activity, AlertTriangle, ArrowLeftRight, CalendarClock, Check, ClipboardCheck,
   Clock3, Cpu, Download, FileClock, History, Laptop, Loader2, Package,
-  Plus, RefreshCw, Save, Search, ShieldCheck, Tag, UserRound, Wrench, X
+  Plus, RefreshCw, Save, Search, Tag, User, Wrench, X
 } from 'lucide-react';
 import hardwareAssetService from '../../services/hardwareAssetService';
 
@@ -139,7 +139,7 @@ export default function InventoryAdvancedPanel({ hardware = [], branches = [], o
   const tabs = [
     ['profile', 'Ficha patrimonial', Tag],
     ['components', 'Componentes', Cpu],
-    ['loans', 'Préstamos', UserRound],
+    ['loans', 'Préstamos', User],
     ['transfers', 'Traslados', ArrowLeftRight],
     ['audit', 'Auditoría', ClipboardCheck],
     ['history', 'Historial', History]
