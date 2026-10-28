@@ -186,7 +186,7 @@ export default function MaintenancePage() {
   return (
     <main className={`relative isolate min-h-[calc(100vh-64px)] overflow-hidden transition-colors duration-300 ${darkMode ? 'bg-[#080D18] text-gray-100' : 'bg-[#F5F7FC] text-gray-900'}`}>
       <AuraPageBackground />
-      <div className="relative z-10 mx-auto w-full max-w-6xl px-6 py-7">
+      <div className="relative z-10 mx-auto w-full max-w-[1600px] p-4 sm:p-6 xl:p-8">
         <header className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
           <div>
             <div className={`mb-2 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[.22em] ${darkMode ? 'text-indigo-300' : 'text-indigo-600'}`}>
