@@ -1,4 +1,5 @@
 import { Hardware } from '../models/Hardware.js';
+import { openDb } from '../config/database.js';
 
 export const getHardware = async (req, res) => {
   try {
@@ -22,6 +23,8 @@ export const getHardwareById = async (req, res) => {
 export const createHardware = async (req, res) => {
   try {
     const item = await Hardware.create(req.body);
+    const db = await openDb();
+    await db.run('INSERT INTO hardware_asset_events (hardware_id, event_type, title, description, performed_by) VALUES (?, ?, ?, ?, ?)', [item.id, 'created', 'Equipo registrado', item.brand_model || item.type, req.user?.id || req.user?.userId || null]);
     res.status(201).json(item);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -31,6 +34,9 @@ export const createHardware = async (req, res) => {
 export const updateHardware = async (req, res) => {
   try {
     const item = await Hardware.update(req.params.id, req.body);
+    if (!item) return res.status(404).json({ error: 'Equipo no encontrado' });
+    const db = await openDb();
+    await db.run('INSERT INTO hardware_asset_events (hardware_id, event_type, title, description, performed_by) VALUES (?, ?, ?, ?, ?)', [item.id, 'updated', 'Ficha del equipo actualizada', 'Se modificaron los datos generales o las especificaciones técnicas.', req.user?.id || req.user?.userId || null]);
     res.json(item);
   } catch (error) {
     res.status(500).json({ error: error.message });
