@@ -235,7 +235,10 @@ export const getHardwareDuplicates = async (req, res) => {
     const db = await openDb();
     const serials = await db.all("SELECT serial_number AS value, COUNT(*) AS count, GROUP_CONCAT(id) AS hardware_ids FROM hardware WHERE serial_number IS NOT NULL AND TRIM(serial_number) <> '' GROUP BY lower(trim(serial_number)) HAVING COUNT(*) > 1");
     const tags = await db.all("SELECT asset_tag AS value, COUNT(*) AS count, GROUP_CONCAT(hardware_id) AS hardware_ids FROM hardware_asset_details WHERE asset_tag IS NOT NULL AND TRIM(asset_tag) <> '' GROUP BY lower(trim(asset_tag)) HAVING COUNT(*) > 1");
-    res.json({ serials, assetTags: tags });
+    const serviceTags = await db.all("SELECT service_tag AS value, COUNT(*) AS count, GROUP_CONCAT(id) AS hardware_ids FROM hardware WHERE service_tag IS NOT NULL AND TRIM(service_tag) <> '' GROUP BY lower(trim(service_tag)) HAVING COUNT(*) > 1");
+    const macAddresses = await db.all("SELECT mac_address AS value, COUNT(*) AS count, GROUP_CONCAT(id) AS hardware_ids FROM hardware WHERE mac_address IS NOT NULL AND TRIM(mac_address) <> '' GROUP BY lower(trim(mac_address)) HAVING COUNT(*) > 1");
+    const ipAddresses = await db.all("SELECT ip_address AS value, COUNT(*) AS count, GROUP_CONCAT(id) AS hardware_ids FROM hardware WHERE ip_address IS NOT NULL AND TRIM(ip_address) <> '' GROUP BY lower(trim(ip_address)) HAVING COUNT(*) > 1");
+    res.json({ serials, assetTags: tags, serviceTags, macAddresses, ipAddresses });
   } catch {
     res.status(500).json({ error: 'No se pudo revisar duplicados.' });
   }
