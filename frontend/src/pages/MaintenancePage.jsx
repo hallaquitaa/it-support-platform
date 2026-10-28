@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import {
   CalendarClock, CheckCircle2, ClipboardList, Plus, Search, Trash2, Wrench, X,
   Pencil, Play, Clock3, Monitor, CalendarDays, History, AlertCircle, RefreshCw,
-  Check, ArrowUpRight, SlidersHorizontal
+  Check, SlidersHorizontal
 } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 import AuraModal from '../components/common/AuraModal';
@@ -32,7 +32,7 @@ const statusMeta = (status, darkMode) => {
   return { label: 'Pendiente', icon: CalendarClock, cls: darkMode ? 'border-amber-400/20 bg-amber-400/[0.07] text-amber-300' : 'border-amber-200 bg-amber-50/90 text-amber-700' };
 };
 
-const formatDate = (value) => {
+const getTodayISO = () => {\n  const now = new Date();\n  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;\n};\n\nconst formatDate = (value) => {
   if (!value) return 'Fecha pendiente';
   const date = new Date(`${String(value).slice(0, 10)}T12:00:00`);
   return Number.isNaN(date.getTime()) ? value : date.toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' });
@@ -87,7 +87,7 @@ export default function MaintenancePage() {
 
   const openCreate = () => {
     setEditing(null);
-    setForm({ ...emptyForm, scheduled_date: new Date().toLocaleDateString('en-CA') });
+    setForm({ ...emptyForm, scheduled_date: getTodayISO() });
     setError('');
     setShowForm(true);
   };
