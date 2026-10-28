@@ -4,9 +4,12 @@ export class Hardware {
   static async getAll(filters = {}) {
     const db = await openDb();
     let query = `
-      SELECT h.*, b.name as branch_name
+      SELECT h.*, b.name as branch_name, d.asset_tag, d.assigned_to, d.department,
+             d.physical_location, d.purchase_cost, d.salvage_value, d.useful_life_years,
+             d.depreciation_method, d.asset_condition, d.image_url, d.last_audit_date
       FROM hardware h
       LEFT JOIN branches b ON h.branch_id = b.id
+      LEFT JOIN hardware_asset_details d ON d.hardware_id = h.id
       WHERE 1=1
     `;
     const params = [];
@@ -43,9 +46,12 @@ export class Hardware {
   static async getById(id) {
     const db = await openDb();
     const item = await db.get(`
-      SELECT h.*, b.name as branch_name
+      SELECT h.*, b.name as branch_name, d.asset_tag, d.assigned_to, d.department,
+             d.physical_location, d.purchase_cost, d.salvage_value, d.useful_life_years,
+             d.depreciation_method, d.asset_condition, d.image_url, d.last_audit_date
       FROM hardware h
       LEFT JOIN branches b ON h.branch_id = b.id
+      LEFT JOIN hardware_asset_details d ON d.hardware_id = h.id
       WHERE h.id = ?
     `, [id]);
     
