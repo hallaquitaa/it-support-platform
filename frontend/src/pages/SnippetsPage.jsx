@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
-  Code2, Copy, FileCode2, Plus, Search, Trash2, Pencil, Terminal, Tag,
-  FolderCog, Check, RefreshCw, AlertCircle, ChevronRight, Braces, Database,
-  FileText, X, CheckCircle2, MoreHorizontal, Filter, Sparkles
+  Code2, Copy, FileText, Plus, Search, Trash2, Pencil, Terminal, Tag,
+  Settings2, Check, RefreshCw, AlertCircle, ChevronRight, Database, X,
+  CheckCircle2, ChevronDown, Filter, Sparkles
 } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 import AuraModal from '../components/common/AuraModal';
@@ -28,9 +28,9 @@ const secondaryButton = (darkMode) => `inline-flex items-center justify-center g
 const getLanguageIcon = (language) => {
   if (language === 'sql') return Database;
   if (['powershell', 'bash', 'cisco', 'mikrotik'].includes(language)) return Terminal;
-  if (['json', 'yaml'].includes(language)) return Braces;
+  if (['json', 'yaml'].includes(language)) return Code2;
   if (language === 'text') return FileText;
-  return FileCode2;
+  return FileText;
 };
 
 const getTodayISO = () => {
@@ -205,7 +205,7 @@ export default function SnippetsPage() {
             <p className={`mt-1.5 max-w-xl text-sm leading-6 ${mutedText(darkMode)}`}>Tus consultas SQL, comandos y scripts listos para buscar, consultar y reutilizar.</p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <button type="button" onClick={() => { resetCategoryEditor(); setError(''); setShowCategoryManager(true); }} className={secondaryButton(darkMode)}><FolderCog size={15}/> Categorías</button>
+            <button type="button" onClick={() => { resetCategoryEditor(); setError(''); setShowCategoryManager(true); }} className={secondaryButton(darkMode)}><Settings2 size={15}/> Categorías</button>
             <button type="button" onClick={openCreate} className={primaryButton}><Plus size={15}/> Nuevo snippet</button>
           </div>
         </header>
@@ -217,7 +217,7 @@ export default function SnippetsPage() {
           {[
             { label: 'Fragmentos guardados', value: snippets.length, detail: 'Biblioteca disponible', icon: Code2, tint: 'text-indigo-400' },
             { label: 'Categorías', value: categories.length, detail: 'Organización técnica', icon: Tag, tint: 'text-violet-400' },
-            { label: 'Lenguajes', value: new Set(snippets.map((snippet) => snippet.language).filter(Boolean)).size, detail: 'Tipos de contenido', icon: Braces, tint: 'text-cyan-400' },
+            { label: 'Lenguajes', value: new Set(snippets.map((snippet) => snippet.language).filter(Boolean)).size, detail: 'Tipos de contenido', icon: Code2, tint: 'text-cyan-400' },
           ].map(({ label, value, detail, icon: Icon, tint }) => (
             <article key={label} className={`relative overflow-hidden rounded-2xl border p-4 shadow-lg backdrop-blur-xl transition-all duration-200 hover:-translate-y-0.5 ${surface(darkMode)}`}>
               <div className="flex items-start justify-between gap-3"><div><p className={`text-xs font-medium ${mutedText(darkMode)}`}>{label}</p><p className="mt-2 text-2xl font-bold tracking-tight">{value}</p><p className={`mt-1 text-[10px] ${mutedText(darkMode)}`}>{detail}</p></div><span className={`flex h-9 w-9 items-center justify-center rounded-xl border ${darkMode ? 'border-gray-700 bg-gray-900/70' : 'border-gray-200 bg-white/80'} ${tint}`}><Icon size={17}/></span></div>
@@ -229,9 +229,9 @@ export default function SnippetsPage() {
         <section className={`grid items-start gap-4 lg:grid-cols-[minmax(0,.88fr)_minmax(0,1.12fr)]`}>
           <section className={`overflow-hidden rounded-2xl border shadow-xl shadow-gray-900/[0.03] backdrop-blur-xl ${surface(darkMode)}`}>
             <header className={`space-y-3 border-b p-4 ${darkMode ? 'border-gray-800/90' : 'border-gray-200/80'}`}>
-              <div className="flex items-center justify-between gap-2"><div><h2 className="text-sm font-bold">Biblioteca</h2><p className={`mt-0.5 text-[10px] ${mutedText(darkMode)}`}>{filtered.length} de {snippets.length} fragmentos</p></div><span className={`flex h-8 w-8 items-center justify-center rounded-lg border ${darkMode ? 'border-gray-700 bg-gray-900/70 text-indigo-300' : 'border-gray-200 bg-white/80 text-indigo-600'}`}><FileCode2 size={15}/></span></div>
+              <div className="flex items-center justify-between gap-2"><div><h2 className="text-sm font-bold">Biblioteca</h2><p className={`mt-0.5 text-[10px] ${mutedText(darkMode)}`}>{filtered.length} de {snippets.length} fragmentos</p></div><span className={`flex h-8 w-8 items-center justify-center rounded-lg border ${darkMode ? 'border-gray-700 bg-gray-900/70 text-indigo-300' : 'border-gray-200 bg-white/80 text-indigo-600'}`}><FileText size={15}/></span></div>
               <div className="relative"><Search size={15} className={`absolute left-3 top-1/2 -translate-y-1/2 ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}/><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar título, contenido o lenguaje..." className={`w-full rounded-xl border py-2.5 pl-9 pr-3 text-xs outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/15 ${darkMode ? 'border-gray-700 bg-[#0A101D]/80 text-gray-100 placeholder:text-gray-600' : 'border-gray-200 bg-white/80 text-gray-800 placeholder:text-gray-400'}`}/></div>
-              <div className="relative"><Filter size={14} className={`pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}/><select value={category} onChange={(event) => setCategory(event.target.value)} className={`w-full appearance-none rounded-xl border py-2.5 pl-9 pr-8 text-xs outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/15 ${darkMode ? 'border-gray-700 bg-[#0A101D]/80 text-gray-200' : 'border-gray-200 bg-white/80 text-gray-700'}`}><option value="all">Todas las categorías</option>{categories.map((item) => <option key={item.id} value={String(item.id)}>{item.name} · {item.snippets_count ?? snippets.filter((snippet) => snippet.category_id === item.id).length}</option>)}</select><MoreHorizontal size={15} className={`pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 ${mutedText(darkMode)}`}/></div>
+              <div className="relative"><Filter size={14} className={`pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}/><select value={category} onChange={(event) => setCategory(event.target.value)} className={`w-full appearance-none rounded-xl border py-2.5 pl-9 pr-8 text-xs outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/15 ${darkMode ? 'border-gray-700 bg-[#0A101D]/80 text-gray-200' : 'border-gray-200 bg-white/80 text-gray-700'}`}><option value="all">Todas las categorías</option>{categories.map((item) => <option key={item.id} value={String(item.id)}>{item.name} · {item.snippets_count ?? snippets.filter((snippet) => snippet.category_id === item.id).length}</option>)}</select><ChevronDown size={15} className={`pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 ${mutedText(darkMode)}`}/></div>
             </header>
 
             {loading ? (
@@ -312,7 +312,7 @@ export default function SnippetsPage() {
         </form>
       </AuraModal>
 
-      <AuraModal open={showCategoryManager} onClose={() => { setShowCategoryManager(false); resetCategoryEditor(); setError(''); }} title="Administrar categorías" description="Organiza la biblioteca sin alterar el contenido de los snippets." icon={FolderCog} maxWidthClass="max-w-md">
+      <AuraModal open={showCategoryManager} onClose={() => { setShowCategoryManager(false); resetCategoryEditor(); setError(''); }} title="Administrar categorías" description="Organiza la biblioteca sin alterar el contenido de los snippets." icon={Settings2} maxWidthClass="max-w-md">
         <div className="space-y-4 p-5">
           {error && <div role="alert" className={`flex items-start gap-2 rounded-xl border px-3 py-2 text-xs ${darkMode ? 'border-rose-400/20 bg-rose-400/[0.07] text-rose-200' : 'border-rose-200 bg-rose-50 text-rose-700'}`}><AlertCircle size={14} className="mt-0.5 shrink-0"/><span>{error}</span></div>}
           <form onSubmit={saveCategory} className="space-y-2">
