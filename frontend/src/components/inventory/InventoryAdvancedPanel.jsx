@@ -84,6 +84,9 @@ export default function InventoryAdvancedPanel({ hardware = [], branches = [], o
   }, [assetId]);
 
   useEffect(() => { loadOverview(); }, [loadOverview]);
+  useEffect(() => {
+    if (!assetId && hardware.length) setAssetId(String(hardware[0].id));
+  }, [assetId, hardware]);
   useEffect(() => { loadAsset(); }, [loadAsset]);
 
   const mutate = async (operation, successMessage) => {
