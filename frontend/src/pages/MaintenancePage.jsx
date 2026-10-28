@@ -32,7 +32,12 @@ const statusMeta = (status, darkMode) => {
   return { label: 'Pendiente', icon: CalendarClock, cls: darkMode ? 'border-amber-400/20 bg-amber-400/[0.07] text-amber-300' : 'border-amber-200 bg-amber-50/90 text-amber-700' };
 };
 
-const getTodayISO = () => {\n  const now = new Date();\n  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;\n};\n\nconst formatDate = (value) => {
+const getTodayISO = () => {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+};
+
+const formatDate = (value) => {
   if (!value) return 'Fecha pendiente';
   const date = new Date(`${String(value).slice(0, 10)}T12:00:00`);
   return Number.isNaN(date.getTime()) ? value : date.toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' });
