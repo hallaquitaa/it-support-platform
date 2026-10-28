@@ -135,7 +135,7 @@ export default function InventoryAdvancedPanel({ hardware = [], branches = [], o
     ? 0
     : Math.min(Math.max(0, purchaseCost - salvageValue), Math.max(0, purchaseCost - salvageValue) * Math.min(1, ageYears / lifeYears));
   const currentValue = Math.max(salvageValue, purchaseCost - accumulatedDepreciation);
-  const duplicateCount = (duplicates?.serials?.length || 0) + (duplicates?.assetTags?.length || 0);
+  const duplicateCount = ['serials', 'assetTags', 'serviceTags', 'macAddresses', 'ipAddresses'].reduce((sum, key) => sum + (duplicates?.[key]?.length || 0), 0);
   const tabs = [
     ['profile', 'Ficha patrimonial', Tag],
     ['components', 'Componentes', Cpu],
@@ -159,7 +159,7 @@ export default function InventoryAdvancedPanel({ hardware = [], branches = [], o
       <Metric icon={ClipboardCheck} title="Auditorías" value={overview?.auditDue ?? '—'} hint="Sin verificar en 180 días" />
     </div>
 
-    {duplicateCount > 0 && <div className="flex items-start gap-2 rounded-xl border border-amber-500/20 bg-amber-500/[0.06] p-3 text-xs text-amber-700 dark:text-amber-300"><AlertTriangle size={15} className="mt-0.5 shrink-0" /><span>Se detectaron {duplicateCount} grupos de posibles duplicados entre seriales y etiquetas patrimoniales. Revísalos antes de importar más equipos.</span></div>}
+    {duplicateCount > 0 && <div className="flex items-start gap-2 rounded-xl border border-amber-500/20 bg-amber-500/[0.06] p-3 text-xs text-amber-700 dark:text-amber-300"><AlertTriangle size={15} className="mt-0.5 shrink-0" /><span>Se detectaron {duplicateCount} grupos de posibles duplicados entre seriales, etiquetas, service tags, MAC o IP. Revísalos antes de importar más equipos.</span></div>}
 
     <div className="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(220px,0.8fr)_minmax(0,2fr)]">
       <div className="space-y-3">
