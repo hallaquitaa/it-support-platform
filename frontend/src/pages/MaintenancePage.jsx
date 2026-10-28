@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
-  CalendarClock, CheckCircle2, ClipboardList, Plus, Search, Trash2, Wrench, X,
-  Pencil, Play, Clock3, Monitor, CalendarDays, History, AlertCircle, RefreshCw,
-  Check, SlidersHorizontal
+  Calendar, CheckCircle2, ClipboardList, Plus, Search, Trash2, Wrench, X,
+  Pencil, Play, Clock, Laptop, History, AlertCircle, RefreshCw, Check, Settings2
 } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 import AuraModal from '../components/common/AuraModal';
@@ -28,8 +27,8 @@ const secondaryButton = (darkMode) => `inline-flex items-center justify-center g
 
 const statusMeta = (status, darkMode) => {
   if (status === 'completed') return { label: 'Completado', icon: CheckCircle2, cls: darkMode ? 'border-emerald-400/20 bg-emerald-400/[0.08] text-emerald-300' : 'border-emerald-200 bg-emerald-50/90 text-emerald-700' };
-  if (status === 'in_progress') return { label: 'En curso', icon: Clock3, cls: darkMode ? 'border-indigo-400/25 bg-indigo-400/[0.08] text-indigo-300' : 'border-indigo-200 bg-indigo-50/90 text-indigo-700' };
-  return { label: 'Pendiente', icon: CalendarClock, cls: darkMode ? 'border-amber-400/20 bg-amber-400/[0.07] text-amber-300' : 'border-amber-200 bg-amber-50/90 text-amber-700' };
+  if (status === 'in_progress') return { label: 'En curso', icon: Clock, cls: darkMode ? 'border-indigo-400/25 bg-indigo-400/[0.08] text-indigo-300' : 'border-indigo-200 bg-indigo-50/90 text-indigo-700' };
+  return { label: 'Pendiente', icon: Calendar, cls: darkMode ? 'border-amber-400/20 bg-amber-400/[0.07] text-amber-300' : 'border-amber-200 bg-amber-50/90 text-amber-700' };
 };
 
 const getTodayISO = () => {
@@ -175,8 +174,8 @@ export default function MaintenancePage() {
   };
 
   const statCards = [
-    { label: 'Programados', value: items.length, icon: CalendarDays, detail: 'Plan de mantenimiento', tint: 'text-indigo-400' },
-    { label: 'Pendientes', value: items.filter((item) => item.status === 'pending').length, icon: Clock3, detail: 'Requieren atención', tint: 'text-amber-400' },
+    { label: 'Programados', value: items.length, icon: Calendar, detail: 'Plan de mantenimiento', tint: 'text-indigo-400' },
+    { label: 'Pendientes', value: items.filter((item) => item.status === 'pending').length, icon: Clock, detail: 'Requieren atención', tint: 'text-amber-400' },
     { label: 'Intervenciones', value: logs.length, icon: CheckCircle2, detail: 'Registradas en historial', tint: 'text-emerald-400' },
   ];
 
@@ -219,7 +218,7 @@ export default function MaintenancePage() {
         <section className={`overflow-hidden rounded-2xl border shadow-xl shadow-gray-900/[0.03] backdrop-blur-xl ${surface(darkMode)}`}>
           <div className={`flex flex-col gap-3 border-b p-4 sm:flex-row sm:items-center sm:justify-between ${darkMode ? 'border-gray-800/90' : 'border-gray-200/80'}`}>
             <div className={`inline-flex w-fit items-center gap-1 rounded-xl border p-1 ${darkMode ? 'border-gray-800 bg-[#0A101D]/80' : 'border-gray-200 bg-gray-100/75'}`}>
-              <button type="button" onClick={() => setTab('schedule')} className={`inline-flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold transition-all ${tab === 'schedule' ? (darkMode ? 'bg-indigo-500/15 text-indigo-200 shadow-sm' : 'bg-white text-indigo-700 shadow-sm') : mutedText(darkMode)}`}><CalendarClock size={14}/> Programación <span className={`rounded-md px-1.5 py-0.5 text-[10px] ${tab === 'schedule' ? 'bg-indigo-500/10' : ''}`}>{items.length}</span></button>
+              <button type="button" onClick={() => setTab('schedule')} className={`inline-flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold transition-all ${tab === 'schedule' ? (darkMode ? 'bg-indigo-500/15 text-indigo-200 shadow-sm' : 'bg-white text-indigo-700 shadow-sm') : mutedText(darkMode)}`}><Calendar size={14}/> Programación <span className={`rounded-md px-1.5 py-0.5 text-[10px] ${tab === 'schedule' ? 'bg-indigo-500/10' : ''}`}>{items.length}</span></button>
               <button type="button" onClick={() => setTab('history')} className={`inline-flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold transition-all ${tab === 'history' ? (darkMode ? 'bg-indigo-500/15 text-indigo-200 shadow-sm' : 'bg-white text-indigo-700 shadow-sm') : mutedText(darkMode)}`}><History size={14}/> Historial <span className={`rounded-md px-1.5 py-0.5 text-[10px] ${tab === 'history' ? 'bg-indigo-500/10' : ''}`}>{logs.length}</span></button>
             </div>
             <div className="flex items-center gap-2">
@@ -232,7 +231,7 @@ export default function MaintenancePage() {
             <div className="flex flex-col items-center justify-center gap-3 p-14"><RefreshCw size={22} className="animate-spin text-indigo-400"/><p className={`text-xs ${mutedText(darkMode)}`}>Cargando {tab === 'schedule' ? 'programación' : 'historial'}...</p></div>
           ) : filtered.length === 0 ? (
             <div className="flex flex-col items-center justify-center px-6 py-14 text-center">
-              <span className={`mb-3 flex h-12 w-12 items-center justify-center rounded-2xl border ${darkMode ? 'border-gray-700 bg-gray-900/70 text-gray-500' : 'border-gray-200 bg-white/80 text-gray-400'}`}>{tab === 'schedule' ? <CalendarClock size={21}/> : <History size={21}/>}</span>
+              <span className={`mb-3 flex h-12 w-12 items-center justify-center rounded-2xl border ${darkMode ? 'border-gray-700 bg-gray-900/70 text-gray-500' : 'border-gray-200 bg-white/80 text-gray-400'}`}>{tab === 'schedule' ? <Calendar size={21}/> : <History size={21}/>}</span>
               <p className="text-sm font-semibold">{query ? 'No hay coincidencias' : tab === 'schedule' ? 'Aún no hay mantenimientos programados' : 'El historial está vacío'}</p>
               <p className={`mt-1 max-w-sm text-xs leading-5 ${mutedText(darkMode)}`}>{query ? 'Prueba con otro texto de búsqueda.' : tab === 'schedule' ? 'Programa la primera tarea preventiva o correctiva para empezar.' : 'Las intervenciones registradas se mostrarán aquí.'}</p>
               {!query && tab === 'schedule' && <button type="button" onClick={openCreate} className={`${primaryButton} mt-4`}><Plus size={14}/> Programar mantenimiento</button>}
@@ -248,8 +247,8 @@ export default function MaintenancePage() {
                       <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border ${darkMode ? 'border-indigo-400/20 bg-indigo-500/[0.08] text-indigo-300' : 'border-indigo-200 bg-indigo-50/90 text-indigo-600'}`}><Wrench size={18}/></span>
                       <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2"><h3 className="break-words text-sm font-semibold">{item.title}</h3><span className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[10px] font-semibold ${meta.cls}`}><StatusIcon size={11}/>{meta.label}</span></div>
-                        <p className={`mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs ${mutedText(darkMode)}`}><span className="inline-flex items-center gap-1"><Monitor size={12}/>{[item.hardware_type, item.brand_model].filter(Boolean).join(' · ') || 'Sin equipo asociado'}</span>{item.serial_number && <span className="font-mono text-[10px]">S/N {item.serial_number}</span>}</p>
-                        <p className={`mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[10px] ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}><span className="inline-flex items-center gap-1"><CalendarDays size={11}/>{formatDate(item.scheduled_date)}</span><span>·</span><span>{item.type === 'preventive' ? 'Preventivo' : 'Correctivo'}</span><span>·</span><span>{item.branch_name || 'Sucursal sin especificar'}</span></p>
+                        <p className={`mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs ${mutedText(darkMode)}`}><span className="inline-flex items-center gap-1"><Laptop size={12}/>{[item.hardware_type, item.brand_model].filter(Boolean).join(' · ') || 'Sin equipo asociado'}</span>{item.serial_number && <span className="font-mono text-[10px]">S/N {item.serial_number}</span>}</p>
+                        <p className={`mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[10px] ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}><span className="inline-flex items-center gap-1"><Calendar size={11}/>{formatDate(item.scheduled_date)}</span><span>·</span><span>{item.type === 'preventive' ? 'Preventivo' : 'Correctivo'}</span><span>·</span><span>{item.branch_name || 'Sucursal sin especificar'}</span></p>
                       </div>
                     </div>
                     <div className="flex shrink-0 items-center gap-1.5 pl-[54px] sm:pl-0">
@@ -270,17 +269,17 @@ export default function MaintenancePage() {
                   <div className="min-w-0 flex-1">
                     <h3 className="whitespace-pre-wrap break-words text-sm font-semibold">{item.description}</h3>
                     <p className={`mt-1.5 flex flex-wrap gap-x-2 text-xs ${mutedText(darkMode)}`}><span>{[item.hardware_type, item.brand_model].filter(Boolean).join(' · ') || 'Sin equipo asociado'}</span>{item.serial_number && <span className="font-mono text-[10px]">S/N {item.serial_number}</span>}</p>
-                    <p className={`mt-1.5 inline-flex items-center gap-1 text-[10px] ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}><Clock3 size={11}/>{formatDate(item.performed_date)}</p>
+                    <p className={`mt-1.5 inline-flex items-center gap-1 text-[10px] ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}><Clock size={11}/>{formatDate(item.performed_date)}</p>
                   </div>
                 </article>
               ))}
             </div>
           )}
-          {!loading && <footer className={`flex items-center justify-between border-t px-4 py-2.5 text-[10px] ${darkMode ? 'border-gray-800 text-gray-600' : 'border-gray-200 text-gray-400'}`}><span>{filtered.length} {tab === 'schedule' ? (filtered.length === 1 ? 'programación' : 'programaciones') : (filtered.length === 1 ? 'intervención' : 'intervenciones')}</span><span className="inline-flex items-center gap-1"><SlidersHorizontal size={11}/> Vista filtrada</span></footer>}
+          {!loading && <footer className={`flex items-center justify-between border-t px-4 py-2.5 text-[10px] ${darkMode ? 'border-gray-800 text-gray-600' : 'border-gray-200 text-gray-400'}`}><span>{filtered.length} {tab === 'schedule' ? (filtered.length === 1 ? 'programación' : 'programaciones') : (filtered.length === 1 ? 'intervención' : 'intervenciones')}</span><span className="inline-flex items-center gap-1"><Settings2 size={11}/> Vista filtrada</span></footer>}
         </section>
       </div>
 
-      <AuraModal open={showForm} onClose={closeSchedule} title={editing ? 'Editar programación' : 'Programar mantenimiento'} description="Define el equipo, el tipo y la fecha de la intervención." icon={CalendarClock} maxWidthClass="max-w-md">
+      <AuraModal open={showForm} onClose={closeSchedule} title={editing ? 'Editar programación' : 'Programar mantenimiento'} description="Define el equipo, el tipo y la fecha de la intervención." icon={Calendar} maxWidthClass="max-w-md">
         <form onSubmit={saveSchedule} className="space-y-4 p-5">
           {error && <div role="alert" className={`rounded-xl border px-3 py-2 text-xs ${darkMode ? 'border-rose-400/20 bg-rose-400/[0.07] text-rose-200' : 'border-rose-200 bg-rose-50 text-rose-700'}`}>{error}</div>}
           <label className={`block text-xs font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Actividad
