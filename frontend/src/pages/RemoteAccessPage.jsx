@@ -17,7 +17,7 @@ import {
   Star,
   Tag,
   Trash2,
-  UserRound,
+  User,
   Wifi,
   X,
 } from 'lucide-react';
