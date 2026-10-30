@@ -11,7 +11,9 @@ import {
   toggleFavorite,
   getFavorites,
   getMostUsed,
-  incrementUsage
+  incrementUsage,
+  getCredentialHistory,
+  auditCredentialSecurity
 } from '../controllers/vaultController.js';
 import { authMiddleware } from '../middleware/authMiddleware.js';
 
@@ -22,6 +24,8 @@ router.use(authMiddleware);
 
 // Rutas específicas (sin parámetros) PRIMERO
 router.get('/stats', getVaultStats);
+router.post('/audit', auditCredentialSecurity);
+router.get('/history/:id', getCredentialHistory);
 router.get('/favorites', getFavorites);
 router.get('/most-used', getMostUsed);
 router.get('/', getCredentials);
