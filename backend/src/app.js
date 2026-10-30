@@ -14,6 +14,7 @@ import maintenanceRoutes from './routes/maintenanceRoutes.js';
 import snippetRoutes from './routes/snippetRoutes.js';
 import hardwareAssetRoutes from './routes/hardwareAssetRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
+import { initRemoteAccessSchema } from './config/remoteAccessSchema.js';
 import { initAdminSchema } from './config/adminSchema.js';
 import { initHardwareAssetSchema } from './config/hardwareAssetSchema.js';
 
@@ -31,6 +32,7 @@ app.use(express.json());
 await initDb();
 await initHardwareAssetSchema();
 await initAdminSchema();
+await initRemoteAccessSchema();
 
 // Rutas
 app.use('/api/auth', authRoutes);
