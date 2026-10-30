@@ -151,7 +151,7 @@ export default function ProfilePage() {
           Volver al Centro de Mando
         </button>
 
-        <section className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white/80 shadow-[0_12px_36px_rgba(25,35,60,0.06)] backdrop-blur-xl dark:border-white/[0.09] dark:bg-[#11151d]/90">
+        <section className="aura-panel aura-glass overflow-hidden rounded-2xl">
           {/* CABECERA AZUL: foto y textos dentro del mismo contenedor */}
           <div className="relative min-h-[210px] bg-gradient-to-r from-slate-900 via-[#202943] to-indigo-900 sm:min-h-[230px]">
             {/* Cuadrícula decorativa */}
