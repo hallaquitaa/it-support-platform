@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import HallITLogo from '../components/brand/HallITLogo';
+import AuraPageBackground from '../components/common/AuraPageBackground';
 import { Activity, ArrowRight, Eye, EyeOff, Fingerprint, Lock, Moon, ShieldCheck, Sun, User, Loader2 } from 'lucide-react';
 
 export default function Login() {
@@ -26,11 +27,7 @@ export default function Login() {
 
   return (
     <main className="relative isolate flex min-h-screen items-center justify-center overflow-hidden bg-[#F5F7FC] px-4 py-8 text-slate-900 transition-colors duration-300 dark:bg-[#080D18] dark:text-white sm:px-6 lg:px-8">
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
-        <div className="absolute -right-32 -top-40 h-[27rem] w-[27rem] rounded-full bg-blue-500/15 blur-3xl dark:bg-blue-500/[0.15]" />
-        <div className="absolute -bottom-48 -left-32 h-[30rem] w-[30rem] rounded-full bg-violet-500/15 blur-3xl dark:bg-violet-500/[0.13]" />
-        <div className="absolute inset-0 opacity-[0.035] dark:opacity-[0.045]" style={{ backgroundImage: 'linear-gradient(rgba(100,116,139,.7) 1px, transparent 1px), linear-gradient(90deg, rgba(100,116,139,.7) 1px, transparent 1px)', backgroundSize: '42px 42px' }} />
-      </div>
+      <AuraPageBackground />
 
       <button type="button" onClick={toggleDarkMode} aria-label={darkMode ? 'Activar tema claro' : 'Activar tema oscuro'} title={darkMode ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro'} className="absolute right-4 top-4 z-20 inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:border-blue-300 hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500/40 dark:border-white/10 dark:bg-[#111827] dark:text-slate-300 dark:hover:border-blue-400/40 sm:right-6 sm:top-6">
         {darkMode ? <Sun size={18} className="text-amber-400" /> : <Moon size={18} />}
