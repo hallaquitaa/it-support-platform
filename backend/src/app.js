@@ -13,6 +13,8 @@ import remoteAccessRoutes from './routes/remoteAccessRoutes.js';
 import maintenanceRoutes from './routes/maintenanceRoutes.js';
 import snippetRoutes from './routes/snippetRoutes.js';
 import hardwareAssetRoutes from './routes/hardwareAssetRoutes.js';
+import adminRoutes from './routes/adminRoutes.js';
+import { initAdminSchema } from './config/adminSchema.js';
 import { initHardwareAssetSchema } from './config/hardwareAssetSchema.js';
 
 dotenv.config();
@@ -28,9 +30,11 @@ app.use(express.json());
 // Inicializar base de datos
 await initDb();
 await initHardwareAssetSchema();
+await initAdminSchema();
 
 // Rutas
 app.use('/api/auth', authRoutes);
+app.use('/api/admin', adminRoutes);
 app.use('/api/branches', branchRoutes);
 app.use('/api/tasks', taskRoutes);
 app.use('/api/tickets', ticketRoutes);
