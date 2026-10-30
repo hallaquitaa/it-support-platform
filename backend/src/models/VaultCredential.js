@@ -318,6 +318,27 @@ export class VaultCredential {
     return this.getById(id);
   }
 
+  static async revealHistoryVersion(credentialId, historyId, masterPassword) {
+    const db = await openDb();
+    const version = await db.get(
+      `SELECT encrypted_password, encrypted_notes
+       FROM vault_credential_history
+       WHERE id = ? AND credential_id = ?`,
+      [historyId, credentialId]
+    );
+    if (!version) throw new Error('Versión histórica no encontrada');
+
+    try {
+      const password = await decrypt(version.encrypted_password, masterPassword);
+      const notes = version.encrypted_notes
+        ? await decrypt(version.encrypted_notes, masterPassword)
+        : '';
+      return { password, notes };
+    } catch {
+      throw new Error('Master Password incorrecta');
+    }
+  }
+
   static async getHistory(id) {
     const db = await openDb();
     return db.all(
