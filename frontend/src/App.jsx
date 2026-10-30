@@ -31,6 +31,7 @@ const RemoteAccessPage = lazy(() => import('./pages/RemoteAccessPage'));
 const ProfilePage = lazy(() => import('./pages/ProfilePage'));
 const MaintenancePage = lazy(() => import('./pages/MaintenancePage'));
 const SnippetsPage = lazy(() => import('./pages/SnippetsPage'));
+const AdminPage = lazy(() => import('./pages/AdminPage'));
 
 import taskService from './services/taskService';
 
@@ -679,6 +680,15 @@ function App() {
               element={
                 <ProtectedRouteWithNavbar>
                   <RemoteAccessPage />
+                </ProtectedRouteWithNavbar>
+              }
+            />
+
+            <Route
+              path="/admin"
+              element={
+                <ProtectedRouteWithNavbar>
+                  <AdminPage />
                 </ProtectedRouteWithNavbar>
               }
             />
