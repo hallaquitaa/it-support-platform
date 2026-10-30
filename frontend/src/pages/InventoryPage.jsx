@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Activity, AlertCircle, ArrowDownUp, ArrowLeft, Battery, Box, Building2, CalendarDays,
   Check, CheckCircle2, ChevronDown, ChevronRight, AlertTriangle, ClipboardList, Cpu,
@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import hardwareService from '../services/hardwareService';
 import branchService from '../services/branchService';
-import InventoryAdvancedPanel from '../components/inventory/InventoryAdvancedPanel';
+const InventoryAdvancedPanel = lazy(() => import('../components/inventory/InventoryAdvancedPanel'));
 import AuraPageBackground from '../components/common/AuraPageBackground';
 
 const DEFAULT_CATEGORIES = [
@@ -318,7 +318,11 @@ export default function InventoryPage() {
 
       <section className="grid grid-cols-2 gap-3 lg:grid-cols-4"><StatCard label="Activos registrados" value={loading ? '—' : (stats.total ?? hardware.length)} detail="Equipos en inventario" icon={Package} accent="indigo" /><StatCard label="Operativos" value={loading ? '—' : (stats.active ?? activeCount)} detail="En funcionamiento" icon={CheckCircle2} accent="indigo" /><StatCard label="En reparación" value={loading ? '—' : (stats.repair ?? repairCount)} detail="Requieren atención" icon={Wrench} accent="amber" /><StatCard label="Con incidencias" value={loading ? '—' : (stats.damaged ?? damagedCount)} detail="Dañados o fuera de servicio" icon={AlertCircle} accent="rose" /></section>
 
-      {showAdvancedPanel && <InventoryAdvancedPanel hardware={hardware} branches={branches} onRefresh={loadData} />}
+      {showAdvancedPanel && (
+        <Suspense fallback={<div role="status" className="rounded-xl border border-slate-200 bg-white/80 p-5 text-xs text-slate-500 dark:border-white/[0.07] dark:bg-[#0F172A]/75 dark:text-slate-400">Cargando herramientas de inventario avanzado...</div>}>
+          <InventoryAdvancedPanel hardware={hardware} branches={branches} onRefresh={loadData} />
+        </Suspense>
+      )}
 
       <section className="rounded-xl border border-slate-200/80 bg-white/75 p-3 shadow-sm dark:border-white/[0.07] dark:bg-[#0F172A]/75 sm:p-4"><div className="flex flex-col gap-3 xl:flex-row xl:items-center"><div className="relative min-w-0 flex-1"><Search size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" /><input value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} placeholder="Buscar por modelo, serial, etiqueta, IP o sede..." className={cn(inputClass, 'border-transparent bg-slate-100/80 pl-10 focus:border-emerald-500/50 dark:border-transparent dark:bg-[#0A0E17]/80')} /><span className="pointer-events-none absolute right-3 top-1/2 hidden -translate-y-1/2 text-[10px] text-slate-500 2xl:block">{filteredHardware.length} resultados</span></div><div className="flex flex-wrap items-center gap-2"><label className="relative"><span className="sr-only">Filtrar por estado</span><Filter size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" /><select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)} className={cn(inputClass, 'w-full appearance-none py-2.5 pl-8 pr-8 text-xs sm:w-auto sm:min-w-[155px]')}><option value="all">Todos los estados</option><option value="active">Operativo</option><option value="repair">En reparación</option><option value="damaged">Dañado</option></select><ChevronDown size={13} className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400" /></label><div className="flex items-center rounded-lg border border-slate-200 bg-white p-1 dark:border-white/[0.08] dark:bg-[#0A0E17]"><button type="button" onClick={() => setViewMode('grid')} aria-label="Vista de cuadrícula" title="Cuadrícula" className={cn('rounded-md p-2 transition', viewMode === 'grid' ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'text-slate-400 hover:text-slate-700 dark:hover:text-slate-200')}><Grid2X2 size={16} /></button><button type="button" onClick={() => setViewMode('list')} aria-label="Vista de lista" title="Lista" className={cn('rounded-md p-2 transition', viewMode === 'list' ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'text-slate-400 hover:text-slate-700 dark:hover:text-slate-200')}><List size={17} /></button></div><button type="button" onClick={() => { setSearchTerm(''); setStatusFilter('all'); setSelectedCategory('all'); }} className="rounded-lg px-2.5 py-2 text-xs font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-white/[0.05] dark:hover:text-white">Limpiar filtros</button></div></div></section>
 
