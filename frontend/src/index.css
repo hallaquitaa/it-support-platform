@@ -191,3 +191,63 @@
 }
 
 /* Transitions are deliberately scoped to components; avoid a universal * transition. */
+
+
+/* ============================================================
+   HALL-IT · SISTEMA VISUAL COMPARTIDO
+   La geometría de Tareas es la referencia para todos los módulos.
+   ============================================================ */
+.aura-module-root {
+  position: relative;
+  isolation: isolate;
+  min-height: calc(100vh - 64px);
+  background-color: var(--aura-background);
+  color: #1e293b;
+  transition: background-color 180ms ease, color 180ms ease;
+}
+
+.dark .aura-module-root {
+  background-color: var(--aura-background);
+  color: #f1f5f9;
+}
+
+.aura-module-container {
+  position: relative;
+  z-index: 10;
+  box-sizing: border-box;
+  width: min(100%, 72rem);
+  max-width: 72rem;
+  margin-inline: auto;
+  padding: 1.75rem 1.5rem 2rem;
+  animation: auraModuleEnter 300ms cubic-bezier(.16, 1, .3, 1) both;
+}
+
+.aura-module-container h1 {
+  font-size: clamp(1.25rem, 1.5vw, 1.5rem);
+  line-height: 1.25;
+  letter-spacing: -0.025em;
+}
+
+.aura-module-container .aura-panel {
+  border-color: var(--aura-border);
+  background: var(--aura-surface);
+  box-shadow: var(--aura-shadow);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+.aura-module-container .aura-glass {
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+@keyframes auraModuleEnter {
+  from { opacity: 0; transform: translate3d(0, 7px, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+
+@media (max-width: 767px) {
+  .aura-module-container {
+    padding: 1.25rem 1rem 1.75rem;
+  }
+}
