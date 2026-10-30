@@ -217,7 +217,7 @@ export default function SnippetsPage() {
             { label: 'Categorías', value: categories.length, detail: 'Organización técnica', icon: Tag, tint: 'text-violet-400' },
             { label: 'Lenguajes', value: new Set(snippets.map((snippet) => snippet.language).filter(Boolean)).size, detail: 'Tipos de contenido', icon: Code2, tint: 'text-cyan-400' },
           ].map(({ label, value, detail, icon: Icon, tint }) => (
-            <article key={label} className={`relative overflow-hidden rounded-2xl border p-4 shadow-lg backdrop-blur-xl transition-all duration-200 hover:-translate-y-0.5 ${surface(darkMode)}`}>
+            <article key={label} className={`relative overflow-hidden rounded-2xl border p-4 shadow-lg transition-all duration-200 hover:-translate-y-0.5 ${surface(darkMode)}`}>
               <div className="flex items-start justify-between gap-3"><div><p className={`text-xs font-medium ${mutedText(darkMode)}`}>{label}</p><p className="mt-2 text-2xl font-bold tracking-tight">{value}</p><p className={`mt-1 text-[10px] ${mutedText(darkMode)}`}>{detail}</p></div><span className={`flex h-9 w-9 items-center justify-center rounded-xl border ${darkMode ? 'border-gray-700 bg-gray-900/70' : 'border-gray-200 bg-white/80'} ${tint}`}><Icon size={17}/></span></div>
               <span className="absolute inset-x-4 bottom-0 h-px bg-gradient-to-r from-transparent via-indigo-400/30 to-transparent"/>
             </article>
@@ -225,7 +225,7 @@ export default function SnippetsPage() {
         </section>
 
         <section className={`grid items-start gap-4 lg:grid-cols-[minmax(0,.88fr)_minmax(0,1.12fr)]`}>
-          <section className={`overflow-hidden rounded-2xl border shadow-xl shadow-gray-900/[0.03] backdrop-blur-xl ${surface(darkMode)}`}>
+          <section className={`overflow-hidden rounded-2xl border shadow-xl shadow-gray-900/[0.03] ${surface(darkMode)}`}>
             <header className={`space-y-3 border-b p-4 ${darkMode ? 'border-gray-800/90' : 'border-gray-200/80'}`}>
               <div className="flex items-center justify-between gap-2"><div><h2 className="text-sm font-bold">Biblioteca</h2><p className={`mt-0.5 text-[10px] ${mutedText(darkMode)}`}>{filtered.length} de {snippets.length} fragmentos</p></div><span className={`flex h-8 w-8 items-center justify-center rounded-lg border ${darkMode ? 'border-gray-700 bg-gray-900/70 text-indigo-300' : 'border-gray-200 bg-white/80 text-indigo-600'}`}><FileText size={15}/></span></div>
               <div className="relative"><Search size={15} className={`absolute left-3 top-1/2 -translate-y-1/2 ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}/><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar título, contenido o lenguaje..." className={`w-full rounded-xl border py-2.5 pl-9 pr-3 text-xs outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/15 ${darkMode ? 'border-gray-700 bg-[#0A101D]/80 text-gray-100 placeholder:text-gray-600' : 'border-gray-200 bg-white/80 text-gray-800 placeholder:text-gray-400'}`}/></div>
@@ -255,7 +255,7 @@ export default function SnippetsPage() {
             {!loading && <footer className={`flex items-center justify-between border-t px-4 py-2.5 text-[10px] ${darkMode ? 'border-gray-800 text-gray-600' : 'border-gray-200 text-gray-400'}`}><span>{categories.length} categorías disponibles</span><button type="button" onClick={() => setShowCategoryManager(true)} className="font-semibold text-indigo-400 transition hover:text-indigo-300">Administrar categorías</button></footer>}
           </section>
 
-          <section className={`min-h-[420px] overflow-hidden rounded-2xl border shadow-xl shadow-gray-900/[0.03] backdrop-blur-xl ${surface(darkMode)}`}>
+          <section className={`min-h-[420px] overflow-hidden rounded-2xl border shadow-xl shadow-gray-900/[0.03] ${surface(darkMode)}`}>
             {selected ? (
               <>
                 <header className={`flex flex-col gap-3 border-b p-4 sm:flex-row sm:items-start sm:justify-between sm:p-5 ${darkMode ? 'border-gray-800/90' : 'border-gray-200/80'}`}>
