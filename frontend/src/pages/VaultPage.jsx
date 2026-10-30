@@ -70,15 +70,15 @@ const EMPTY_FORM = { service_name: '', url: '', username: '', password: '', note
 const StatusBadge = ({ status }) => {
   const active = status !== 'inactive';
   const Icon = active ? CheckCircle2 : AlertCircle;
-  return <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium ${active ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-400' : 'border-rose-500/20 bg-rose-500/10 text-rose-400'}`}><Icon size={12} />{active ? 'Activa' : 'Inactiva'}</span>;
+  return <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium ${active ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300' : 'border-rose-500/20 bg-rose-500/10 text-rose-700 dark:text-rose-300'}`}><Icon size={12} />{active ? 'Activa' : 'Inactiva'}</span>;
 };
 
 const PasswordStrength = ({ length = 0 }) => {
   const strength = length >= 12 ? { label: 'Fuerte', width: '100%', color: 'bg-emerald-400' } : length >= 8 ? { label: 'Media', width: '66%', color: 'bg-amber-400' } : length >= 6 ? { label: 'Baja', width: '40%', color: 'bg-orange-400' } : { label: 'Débil', width: '20%', color: 'bg-rose-400' };
-  return <div className="mt-3 flex items-center gap-3"><div className="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-700"><div className={`h-full rounded-full transition-all duration-300 ${strength.color}`} style={{ width: strength.width }} /></div><span className="w-12 text-right text-[11px] text-slate-400">{strength.label}</span></div>;
+  return <div className="mt-3 flex items-center gap-3"><div className="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700"><div className={`h-full rounded-full transition-all duration-300 ${strength.color}`} style={{ width: strength.width }} /></div><span className="w-12 text-right text-[11px] text-slate-400">{strength.label}</span></div>;
 };
 
-const Surface = ({ children, className = '' }) => <section className={`rounded-xl border border-slate-200/80 bg-white/85 shadow-[0_8px_28px_rgba(35,50,90,0.05)] dark:border-white/[0.07] dark:bg-[#111827]/90 dark:shadow-[0_12px_35px_rgba(0,0,0,0.12)] ${className}`}>{children}</section>;
+const Surface = ({ children, className = '' }) => <section className={`aura-panel rounded-xl ${className}`}>{children}</section>;
 const FieldLabel = ({ children }) => <label className="mb-1.5 block text-xs font-medium text-slate-700 dark:text-slate-300">{children}</label>;
 const inputClass = 'w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/10 dark:border-white/10 dark:bg-[#0A0E17] dark:text-slate-100 dark:placeholder:text-slate-600 dark:focus:border-cyan-400/50 dark:focus:ring-cyan-400/10';
 const smallButton = 'inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white/70 px-3 py-2 text-xs font-medium text-slate-700 transition hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-700 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-300 dark:hover:border-white/15 dark:hover:bg-white/[0.07] dark:text-white dark:hover:text-white';
@@ -202,6 +202,7 @@ export default function VaultPage() {
 
   const openCredentialHistory = async (credential) => {
     setHistoryLoading(true);
+    setHistorySecrets({});
     setHistoryModal({ credential, entries: [] });
     try {
       const entries = await vaultService.getHistory(credential.id);
@@ -246,7 +247,7 @@ export default function VaultPage() {
       onConfirm: async masterPassword => {
         try {
           const dataToSend = { service_name: formData.service_name, url: formData.url, username: formData.username, password: formData.password, category: formData.category, status: formData.status, expires_at: formData.expires_at || null };
-          if (!editingItem || formData.notes) dataToSend.notes = formData.notes;
+          if (!editingItem || Object.prototype.hasOwnProperty.call(editingItem, 'notes')) dataToSend.notes = formData.notes;
           if (editingItem) await vaultService.update(editingItem.id, dataToSend, masterPassword);
           else await vaultService.create(dataToSend, masterPassword);
           setShowForm(false); setEditingItem(null); resetForm();
