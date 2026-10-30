@@ -200,10 +200,16 @@ export class VaultCredential {
     );
     if (!credential) throw new Error('Credencial no encontrada');
 
-    const password = await decrypt(credential.encrypted_password, masterPassword);
-    const notes = credential.encrypted_notes
-      ? await decrypt(credential.encrypted_notes, masterPassword)
-      : '';
+    let password;
+    let notes = '';
+    try {
+      password = await decrypt(credential.encrypted_password, masterPassword);
+      notes = credential.encrypted_notes
+        ? await decrypt(credential.encrypted_notes, masterPassword)
+        : '';
+    } catch {
+      throw new Error('Master Password incorrecta');
+    }
 
     return { password, notes };
   }
