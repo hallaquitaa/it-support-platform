@@ -94,6 +94,7 @@ export default function VaultPage() {
   const [securityAudit, setSecurityAudit] = useState(null);
   const [historyModal, setHistoryModal] = useState(null);
   const [historyLoading, setHistoryLoading] = useState(false);
+  const [historySecrets, setHistorySecrets] = useState({});
   const [showCategoryForm, setShowCategoryForm] = useState(false);
   const [editingCategory, setEditingCategory] = useState(null);
   const [editingItem, setEditingItem] = useState(null);
@@ -212,6 +213,30 @@ export default function VaultPage() {
       setHistoryLoading(false);
     }
   };
+
+  const revealHistoricalVersion = (entry) => requestMasterPassword({
+    title: 'Consultar versión anterior',
+    message: `Introduce la Master Password para revelar temporalmente la contraseña guardada en la versión #${entry.id}.`,
+    onConfirm: async masterPassword => {
+      try {
+        const result = await vaultService.revealHistory(
+          historyModal.credential.id,
+          entry.id,
+          masterPassword
+        );
+        setHistorySecrets((current) => ({
+          ...current,
+          [entry.id]: result.password,
+        }));
+      } catch (error) {
+        showAlert(
+          'No se pudo revelar la versión',
+          error.response?.data?.error || error.message,
+          'error'
+        );
+      }
+    },
+  });
 
   const handleSubmit = async event => {
     event.preventDefault();
@@ -469,7 +494,7 @@ export default function VaultPage() {
                 <h2 id="vault-history-title" className="text-sm font-semibold text-slate-900 dark:text-white">Historial de {historyModal.credential.service_name}</h2>
                 <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Solo se muestra el historial de cambios; no se exponen contraseñas ni valores cifrados.</p>
               </div>
-              <button type="button" onClick={() => setHistoryModal(null)} className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-white/[0.06]" aria-label="Cerrar historial"><X size={17} /></button>
+              <button type="button" onClick={() => { setHistoryModal(null); setHistorySecrets({}); }} className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-white/[0.06]" aria-label="Cerrar historial"><X size={17} /></button>
             </header>
             <div className="max-h-[60vh] overflow-y-auto p-5">
               {historyLoading ? (
@@ -484,6 +509,22 @@ export default function VaultPage() {
                       </div>
                       <p className="mt-1 text-xs text-slate-600 dark:text-slate-300">{entry.service_name} · {entry.username}</p>
                       {entry.change_reason && <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">{entry.change_reason}</p>}
+                      <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+                        <button type="button" onClick={() => revealHistoricalVersion(entry)} className="inline-flex items-center gap-2 rounded-lg border border-indigo-500/20 bg-indigo-500/[0.06] px-3 py-2 text-[11px] font-semibold text-indigo-700 transition hover:bg-indigo-500/[0.1] dark:text-indigo-200">
+                          <Eye size={13} />{historySecrets[entry.id] ? 'Consultar nuevamente' : 'Revelar contraseña anterior'}
+                        </button>
+                        {historySecrets[entry.id] && (
+                          <button type="button" onClick={() => handleCopy(historySecrets[entry.id], 'Contraseña histórica')} className="inline-flex items-center gap-1.5 text-[11px] font-medium text-slate-500 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-indigo-200">
+                            <Copy size={12} />Copiar
+                          </button>
+                        )}
+                      </div>
+                      {historySecrets[entry.id] && (
+                        <div className="mt-3 rounded-lg border border-amber-500/20 bg-amber-500/[0.055] p-3">
+                          <p className="mb-1 text-[9px] font-semibold uppercase tracking-wide text-amber-800 dark:text-amber-200">Contraseña de esta versión</p>
+                          <code className="block break-all text-xs text-slate-800 dark:text-slate-100">{historySecrets[entry.id]}</code>
+                        </div>
+                      )}
                     </article>
                   ))}
                 </div>
