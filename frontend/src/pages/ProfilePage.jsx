@@ -14,6 +14,7 @@ import {
   Building2,
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import AuraPageBackground from '../components/common/AuraPageBackground';
 
 const STORAGE_KEY = 'it-support-user-profile';
 
@@ -136,19 +137,10 @@ export default function ProfilePage() {
     'text-xs font-medium text-slate-600 dark:text-slate-300';
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#f4f6fb] text-slate-800 dark:bg-[#0b0d12] dark:text-slate-100">
-      {/* Fondo decorativo */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 opacity-50 dark:opacity-25"
-        style={{
-          backgroundImage:
-            'linear-gradient(rgba(99,102,241,0.035) 1px, transparent 1px), linear-gradient(90deg, rgba(99,102,241,0.035) 1px, transparent 1px)',
-          backgroundSize: '28px 28px',
-        }}
-      />
+    <div className="relative isolate aura-module-root min-h-screen overflow-hidden bg-[#f5f7fc] text-slate-900 dark:bg-[#080d18] dark:text-slate-100">
+      <AuraPageBackground />
 
-      <main className="relative z-10 mx-auto max-w-5xl px-4 py-6 sm:px-6 lg:py-8">
+      <main className="aura-module-container relative z-10 mx-auto max-w-5xl px-4 py-6 sm:px-6 lg:py-8">
         {/* Regresar al Centro de Mando */}
         <button
           type="button"
@@ -159,7 +151,7 @@ export default function ProfilePage() {
           Volver al Centro de Mando
         </button>
 
-        <section className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white/80 shadow-[0_12px_36px_rgba(25,35,60,0.06)] backdrop-blur-xl dark:border-white/[0.09] dark:bg-[#11151d]/90">
+        <section className="aura-panel aura-glass overflow-hidden rounded-2xl">
           {/* CABECERA AZUL: foto y textos dentro del mismo contenedor */}
           <div className="relative min-h-[210px] bg-gradient-to-r from-slate-900 via-[#202943] to-indigo-900 sm:min-h-[230px]">
             {/* Cuadrícula decorativa */}

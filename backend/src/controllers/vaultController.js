@@ -3,7 +3,7 @@ import { openDb } from '../config/database.js';
 
 export const getCredentials = async (req, res) => {
   try {
-    const credentials = await VaultCredential.getAll(req.query);
+    const credentials = await VaultCredential.getAll({ ...req.query, userId: req.user.id });
     res.json(credentials);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -47,8 +47,8 @@ export const revealCredential = async (req, res) => {
     const revealed = await VaultCredential.revealPassword(id, masterPassword);
     res.json(revealed);
   } catch (error) {
-    if (error.message.includes('bad decrypt') || error.message.includes('EVP_DecryptFinal_ex')) {
-      res.status(401).json({ error: 'Master Password incorrecto' });
+    if (error.message === 'Master Password incorrecta') {
+      res.status(401).json({ error: error.message });
     } else {
       res.status(500).json({ error: error.message });
     }
@@ -63,7 +63,7 @@ export const updateCredential = async (req, res) => {
   }
   
   try {
-    const credential = await VaultCredential.update(req.params.id, data, masterPassword);
+    const credential = await VaultCredential.update(req.params.id, data, masterPassword, req.user.id);
     res.json(credential);
   } catch (error) {
     if (error.message === 'Master Password incorrecta') {
@@ -71,6 +71,74 @@ export const updateCredential = async (req, res) => {
     } else {
       res.status(500).json({ error: error.message });
     }
+  }
+};
+
+export const revealCredentialHistoryVersion = async (req, res) => {
+  const masterPassword = String(req.body?.masterPassword || '');
+  if (!masterPassword) {
+    return res.status(400).json({ error: 'Se requiere Master Password.' });
+  }
+
+  try {
+    const result = await VaultCredential.revealHistoryVersion(
+      req.params.id,
+      req.params.historyId,
+      masterPassword
+    );
+
+    const db = await openDb();
+    await db.run(
+      `INSERT INTO vault_access_logs
+        (credential_id, user_id, action, ip_address, user_agent)
+       VALUES (?, ?, ?, ?, ?)`,
+      [
+        req.params.id,
+        req.user.id,
+        'history_revealed',
+        req.ip || null,
+        req.get('user-agent') || null,
+      ]
+    );
+
+    return res.json(result);
+  } catch (error) {
+    if (error.message === 'Master Password incorrecta') {
+      return res.status(401).json({ error: error.message });
+    }
+    if (error.message === 'Versión histórica no encontrada') {
+      return res.status(404).json({ error: error.message });
+    }
+    console.error('Error revelando versión histórica de Vault:', error);
+    return res.status(500).json({ error: 'No se pudo revelar la versión histórica.' });
+  }
+};
+
+export const getCredentialHistory = async (req, res) => {
+  try {
+    const history = await VaultCredential.getHistory(req.params.id);
+    res.json(history);
+  } catch (error) {
+    console.error('Error consultando historial de Vault:', error);
+    res.status(500).json({ error: 'No se pudo consultar el historial.' });
+  }
+};
+
+export const auditCredentialSecurity = async (req, res) => {
+  const masterPassword = String(req.body?.masterPassword || '');
+  if (!masterPassword) {
+    return res.status(400).json({ error: 'Se requiere Master Password para auditar la bóveda.' });
+  }
+
+  try {
+    const result = await VaultCredential.auditSecurity(masterPassword);
+    res.json(result);
+  } catch (error) {
+    if (error.message === 'Master Password incorrecta') {
+      return res.status(401).json({ error: error.message });
+    }
+    console.error('Error en auditoría de Vault:', error);
+    res.status(500).json({ error: 'No se pudo completar la auditoría de seguridad.' });
   }
 };
 
@@ -190,8 +258,16 @@ export const revealMultiple = async (req, res) => {
     
     for (const id of ids) {
       try {
-        const revealed = await VaultCredential.revealPassword(id, masterPassword);
-        results.push(revealed);
+        const [revealed, metadata] = await Promise.all([
+          VaultCredential.revealPassword(id, masterPassword),
+          VaultCredential.getById(id),
+        ]);
+        // Include only non-secret metadata plus the requested password for the explicit export action.
+        results.push({
+          ...metadata,
+          id: Number(id),
+          password: revealed.password,
+        });
       } catch (err) {
         console.error(`Error descifrando credencial ${id}:`, err);
         results.push({ id, error: 'Error al descifrar', service_name: 'Error' });

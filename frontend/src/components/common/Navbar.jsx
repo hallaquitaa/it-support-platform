@@ -5,7 +5,7 @@ import { useTheme } from '../../contexts/ThemeContext';
 import HallITLogo from './HallITLogo';
 import {
   Home, Key, CheckSquare, Server, Calendar, Wifi, Code, Building2,
-  LogOut, Menu, X, Sun, Moon, ArrowLeft
+  LogOut, Menu, X, Sun, Moon, ArrowLeft, ShieldCheck
 } from 'lucide-react';
 
 const navItems = [
@@ -21,9 +21,13 @@ const navItems = [
 export default function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
   const { darkMode, toggleDarkMode } = useTheme();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const visibleNavItems = user?.role === 'admin'
+    ? [...navItems, { name: 'Administración', path: '/admin', icon: ShieldCheck }]
+    : navItems;
 
   const isActive = (path) => location.pathname === path;
 
@@ -32,8 +36,8 @@ export default function Navbar() {
       <nav
         className={`hidden md:block sticky top-0 z-[100] border-b transition-all duration-500 ease-out ${
           darkMode
-            ? 'bg-slate-900 border-slate-700/80'
-            : 'bg-white border-slate-200/90'
+            ? 'bg-slate-900/90 border-slate-700/80 backdrop-blur-xl'
+            : 'bg-white/90 border-slate-200/90 backdrop-blur-xl'
         } `}
       >
         <div className="px-5 py-2">
@@ -66,7 +70,7 @@ export default function Navbar() {
             </div>
 
             <div className="flex items-center justify-center gap-1">
-              {navItems.map((item, index) => {
+              {visibleNavItems.map((item, index) => {
                 const Icon = item.icon;
                 const active = isActive(item.path);
                 return (
@@ -121,8 +125,8 @@ export default function Navbar() {
       <nav
         className={`md:hidden sticky top-0 z-[100] border-b transition-all duration-500 ease-out ${
           darkMode
-            ? 'bg-slate-900 border-slate-700/80'
-            : 'bg-white border-slate-200/90'
+            ? 'bg-slate-900/90 border-slate-700/80 backdrop-blur-xl'
+            : 'bg-white/90 border-slate-200/90 backdrop-blur-xl'
         } `}
       >
         <div className="px-4 py-3 flex items-center justify-between animate-[navbarContentIn_420ms_cubic-bezier(.16,1,.3,1)]">
@@ -160,7 +164,7 @@ export default function Navbar() {
 
         {mobileMenuOpen && (
           <div className={`px-4 pb-3 space-y-1 border-t ${darkMode ? 'border-slate-700' : 'border-slate-200'} animate-fade-in`}>
-            {navItems.map((item) => {
+            {visibleNavItems.map((item) => {
               const Icon = item.icon;
               const active = isActive(item.path);
               return (

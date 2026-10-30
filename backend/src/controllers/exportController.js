@@ -18,14 +18,21 @@ export const exportCredentialsToExcel = async (req, res) => {
       ORDER BY v.service_name ASC
     `, [req.user.id]);
 
-    // Si se incluyen contraseñas y se proporcionó Master Password, descifrar
-    if (includePasswords && masterPassword) {
+    // Decrypt only after explicit Master Password confirmation. Notes are encrypted too.
+    if (includePasswords && !masterPassword) {
+      return res.status(400).json({ error: 'Se requiere Master Password para incluir contraseñas.' });
+    }
+
+    if (masterPassword) {
       for (const cred of credentials) {
         try {
           const revealed = await VaultCredential.revealPassword(cred.id, masterPassword);
-          cred.decrypted_password = revealed.password;
-        } catch (error) {
-          cred.decrypted_password = '*** ERROR: MASTER PASSWORD INCORRECTA ***';
+          cred.notes = revealed.notes || '';
+          if (includePasswords) {
+            cred.decrypted_password = revealed.password;
+          }
+        } catch {
+          return res.status(401).json({ error: 'Master Password incorrecta. No se generó el archivo.' });
         }
       }
     }

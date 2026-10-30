@@ -59,6 +59,21 @@ const vaultService = {
   incrementUsage: async (id) => {
     const response = await api.post(`/vault/${id}/usage`);
     return response.data;
+  },
+
+  getHistory: async (id) => {
+    const response = await api.get(`/vault/history/${id}`);
+    return response.data;
+  },
+
+  revealHistory: async (id, historyId, masterPassword) => {
+    const response = await api.post(`/vault/history/${id}/${historyId}/reveal`, { masterPassword });
+    return response.data;
+  },
+
+  audit: async (masterPassword) => {
+    const response = await api.post('/vault/audit', { masterPassword });
+    return response.data;
   }
 };
 

@@ -8,6 +8,8 @@ import {
 } from 'react-router-dom';
 
 import {
+  lazy,
+  Suspense,
   useCallback,
   useEffect,
   useRef,
@@ -18,16 +20,18 @@ import { AuthProvider } from './contexts/AuthContext';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 
 import Navbar from './components/common/Navbar';
-import Login from './pages/Login';
-import Dashboard from './pages/Dashboard';
-import BranchesPage from './pages/BranchesPage';
-import TasksPage from './pages/TasksPage';
-import InventoryPage from './pages/InventoryPage';
-import VaultPage from './pages/VaultPage';
-import RemoteAccessPage from './pages/RemoteAccessPage';
-import ProfilePage from './pages/ProfilePage';
-import MaintenancePage from './pages/MaintenancePage';
-import SnippetsPage from './pages/SnippetsPage';
+
+const Login = lazy(() => import('./pages/Login'));
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const BranchesPage = lazy(() => import('./pages/BranchesPage'));
+const TasksPage = lazy(() => import('./pages/TasksPage'));
+const InventoryPage = lazy(() => import('./pages/InventoryPage'));
+const VaultPage = lazy(() => import('./pages/VaultPage'));
+const RemoteAccessPage = lazy(() => import('./pages/RemoteAccessPage'));
+const ProfilePage = lazy(() => import('./pages/ProfilePage'));
+const MaintenancePage = lazy(() => import('./pages/MaintenancePage'));
+const SnippetsPage = lazy(() => import('./pages/SnippetsPage'));
+const AdminPage = lazy(() => import('./pages/AdminPage'));
 
 import taskService from './services/taskService';
 
@@ -376,7 +380,7 @@ function GlobalTaskDueNotifier() {
 
   const loadTasks = useCallback(async () => {
     if (loadingRef.current || !localStorage.getItem('token')) {
-      return;
+      return null;
     }
 
     loadingRef.current = true;
@@ -429,11 +433,14 @@ function GlobalTaskDueNotifier() {
           setQueue((prev) => [...prev, ...fresh]);
         }
       }
+
+      return tasks;
     } catch (error) {
       console.error(
         'Error comprobando tareas programadas:',
         error
       );
+      return null;
     } finally {
       loadingRef.current = false;
     }
@@ -464,17 +471,8 @@ function GlobalTaskDueNotifier() {
         : DUE_CHECK_FALLBACK;
 
       timerRef.current = setTimeout(async () => {
-        await loadTasks();
-
-        try {
-          const tasks = await taskService.getAll();
-          scheduleNextCheck(tasks);
-        } catch {
-          timerRef.current = setTimeout(
-            () => scheduleNextCheck([]),
-            DUE_CHECK_FALLBACK
-          );
-        }
+        const nextTasks = await loadTasks();
+        scheduleNextCheck(Array.isArray(nextTasks) ? nextTasks : []);
       }, delay);
     },
     [loadTasks]
@@ -486,26 +484,22 @@ function GlobalTaskDueNotifier() {
     const refresh = async () => {
       if (!active || loadingRef.current) return;
 
-      await loadTasks();
+      const tasks = await loadTasks();
 
       if (!active) return;
 
-      try {
-        const tasks = await taskService.getAll();
-        if (active) scheduleNextCheck(tasks);
-      } catch (error) {
-        console.error(
-          'Error programando comprobación de tareas:',
-          error
-        );
-      }
+      scheduleNextCheck(Array.isArray(tasks) ? tasks : []);
     };
 
     refresh();
 
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') refresh();
+    };
+
     window.addEventListener('it-support:tasks-changed', refresh);
     window.addEventListener('focus', refresh);
-    document.addEventListener('visibilitychange', refresh);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
       active = false;
@@ -517,7 +511,7 @@ function GlobalTaskDueNotifier() {
       window.removeEventListener('focus', refresh);
       document.removeEventListener(
         'visibilitychange',
-        refresh
+        handleVisibilityChange
       );
 
       if (timerRef.current) {
@@ -580,6 +574,23 @@ function GlobalTaskDueNotifier() {
   );
 }
 
+function ModuleLoading() {
+  const { darkMode } = useTheme();
+
+  return (
+    <div
+      role="status"
+      aria-live="polite"
+      className={`flex min-h-[calc(100vh-64px)] items-center justify-center gap-3 px-6 text-xs font-medium tracking-wide ${
+        darkMode ? 'text-slate-300' : 'text-slate-500'
+      }`}
+    >
+      <span className="h-4 w-4 animate-spin rounded-full border-2 border-indigo-500/20 border-t-indigo-500" />
+      Cargando módulo...
+    </div>
+  );
+}
+
 function App() {
   const token = localStorage.getItem('token');
 
@@ -603,7 +614,8 @@ function App() {
     <ThemeProvider>
       <AuthProvider>
         <Router>
-          <Routes>
+          <Suspense fallback={<ModuleLoading />}>
+            <Routes>
             <Route
               path="/login"
               element={<Login />}
@@ -673,6 +685,15 @@ function App() {
             />
 
             <Route
+              path="/admin"
+              element={
+                <ProtectedRouteWithNavbar>
+                  <AdminPage />
+                </ProtectedRouteWithNavbar>
+              }
+            />
+
+            <Route
               path="/profile"
               element={
                 <ProtectedRouteWithNavbar>
@@ -694,7 +715,8 @@ function App() {
               path="*"
               element={<Navigate to="/" replace />}
             />
-          </Routes>
+            </Routes>
+          </Suspense>
 
           {token && <GlobalTaskDueNotifier />}
         </Router>
