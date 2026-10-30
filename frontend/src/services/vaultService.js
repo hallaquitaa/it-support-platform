@@ -66,6 +66,11 @@ const vaultService = {
     return response.data;
   },
 
+  revealHistory: async (id, historyId, masterPassword) => {
+    const response = await api.post(`/vault/history/${id}/${historyId}/reveal`, { masterPassword });
+    return response.data;
+  },
+
   audit: async (masterPassword) => {
     const response = await api.post('/vault/audit', { masterPassword });
     return response.data;
