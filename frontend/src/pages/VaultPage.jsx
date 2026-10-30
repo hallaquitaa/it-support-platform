@@ -80,8 +80,8 @@ const PasswordStrength = ({ length = 0 }) => {
 
 const Surface = ({ children, className = '' }) => <section className={`rounded-xl border border-slate-200/80 bg-white/85 shadow-[0_8px_28px_rgba(35,50,90,0.05)] dark:border-white/[0.07] dark:bg-[#111827]/90 dark:shadow-[0_12px_35px_rgba(0,0,0,0.12)] ${className}`}>{children}</section>;
 const FieldLabel = ({ children }) => <label className="mb-1.5 block text-xs font-medium text-slate-700 dark:text-slate-300">{children}</label>;
-const inputClass = 'w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/10 dark:border-white/10 dark:bg-[#0A0E17] dark:text-slate-800 dark:text-slate-100 dark:placeholder:text-slate-600 dark:focus:border-cyan-400/50 dark:focus:ring-cyan-400/10';
-const smallButton = 'inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white/70 px-3 py-2 text-xs font-medium text-slate-700 transition hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-700 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-300 dark:hover:border-white/15 dark:hover:bg-white/[0.07] dark:hover:text-slate-900 dark:text-white';
+const inputClass = 'w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/10 dark:border-white/10 dark:bg-[#0A0E17] dark:text-slate-100 dark:placeholder:text-slate-600 dark:focus:border-cyan-400/50 dark:focus:ring-cyan-400/10';
+const smallButton = 'inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white/70 px-3 py-2 text-xs font-medium text-slate-700 transition hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-700 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-300 dark:hover:border-white/15 dark:hover:bg-white/[0.07] dark:text-white dark:hover:text-white';
 
 export default function VaultPage() {
   const [credentials, setCredentials] = useState([]);
@@ -334,7 +334,7 @@ export default function VaultPage() {
   if (loading) return <div className="relative isolate flex min-h-screen items-center justify-center overflow-hidden bg-[#f5f7fc] text-slate-700 dark:bg-[#080d18] dark:text-slate-300"><AuraPageBackground /><div className="relative flex items-center gap-3 rounded-xl border border-slate-200 bg-white/85 px-5 py-4 dark:border-white/[0.08] dark:bg-[#111827]/90"><RefreshCw size={18} className="animate-spin text-indigo-500 dark:text-cyan-400" /><span className="text-sm">Cargando bóveda segura…</span></div></div>;
 
   return (
-    <div className="relative isolate min-h-screen overflow-hidden bg-[#f5f7fc] px-4 py-5 text-slate-900 dark:bg-[#080d18] dark:text-slate-800 dark:text-slate-100 sm:px-6 lg:px-8">
+    <div className="relative isolate min-h-screen overflow-hidden bg-[#f5f7fc] px-4 py-5 text-slate-900 dark:bg-[#080d18] dark:text-slate-100 sm:px-6 lg:px-8">
       <AuraPageBackground />
       <div className="relative mx-auto max-w-[1800px]">
         <header className="mb-6 flex flex-col justify-between gap-4 border-b border-slate-200/80 dark:border-white/[0.07] pb-5 xl:flex-row xl:items-center">
@@ -380,7 +380,7 @@ export default function VaultPage() {
                 {securityAudit.findings.map((finding) => (
                   <div key={finding.id} className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                      <p className="text-xs font-semibold text-slate-800 dark:text-slate-800 dark:text-slate-100">{finding.service_name}</p>
+                      <p className="text-xs font-semibold text-slate-800 dark:text-slate-100">{finding.service_name}</p>
                       <p className="mt-1 text-[10px] text-slate-500 dark:text-slate-400">ID #{finding.id} · Puntuación estimada {finding.score}/100</p>
                     </div>
                     <div className="flex flex-wrap gap-1.5">
@@ -479,7 +479,7 @@ export default function VaultPage() {
                   {historyModal.entries.map((entry) => (
                     <article key={entry.id} className="rounded-xl border border-slate-200 p-3 dark:border-white/[0.08]">
                       <div className="flex flex-wrap items-center justify-between gap-2">
-                        <p className="text-xs font-semibold text-slate-800 dark:text-slate-800 dark:text-slate-100">Versión anterior #{entry.id}</p>
+                        <p className="text-xs font-semibold text-slate-800 dark:text-slate-100">Versión anterior #{entry.id}</p>
                         <time className="text-[10px] text-slate-500 dark:text-slate-400">{entry.changed_at ? new Date(String(entry.changed_at).replace(' ', 'T')).toLocaleString() : '—'}</time>
                       </div>
                       <p className="mt-1 text-xs text-slate-600 dark:text-slate-300">{entry.service_name} · {entry.username}</p>
