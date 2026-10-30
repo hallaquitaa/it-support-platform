@@ -13,6 +13,7 @@ import {
   getMostUsed,
   incrementUsage,
   getCredentialHistory,
+  revealCredentialHistoryVersion,
   auditCredentialSecurity
 } from '../controllers/vaultController.js';
 import { authMiddleware } from '../middleware/authMiddleware.js';
@@ -26,6 +27,7 @@ router.use(authMiddleware);
 router.get('/stats', getVaultStats);
 router.post('/audit', auditCredentialSecurity);
 router.get('/history/:id', getCredentialHistory);
+router.post('/history/:id/:historyId/reveal', revealCredentialHistoryVersion);
 router.get('/favorites', getFavorites);
 router.get('/most-used', getMostUsed);
 router.get('/', getCredentials);
