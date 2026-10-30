@@ -1,28 +1,63 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 
-const ThemeContext = createContext();
+const ThemeContext = createContext(null);
+const THEME_STORAGE_KEY = 'darkMode';
+
+const readInitialTheme = () => {
+  try {
+    return window.localStorage.getItem(THEME_STORAGE_KEY) === 'true';
+  } catch {
+    return false;
+  }
+};
 
 export const useTheme = () => useContext(ThemeContext);
 
 export const ThemeProvider = ({ children }) => {
-  const [darkMode, setDarkMode] = useState(() => {
-    const saved = localStorage.getItem('darkMode');
-    return saved === 'true';
-  });
+  const [darkMode, setDarkMode] = useState(readInitialTheme);
 
   useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
+    const root = document.documentElement;
+
+    root.classList.toggle('dark', darkMode);
+    root.dataset.theme = darkMode ? 'dark' : 'light';
+    root.style.colorScheme = darkMode ? 'dark' : 'light';
+
+    try {
+      window.localStorage.setItem(THEME_STORAGE_KEY, String(darkMode));
+    } catch {
+      // La preferencia sigue funcionando durante la sesión si el storage está bloqueado.
     }
-    localStorage.setItem('darkMode', darkMode);
   }, [darkMode]);
 
-  const toggleDarkMode = () => setDarkMode(!darkMode);
+  useEffect(() => {
+    const syncTheme = (event) => {
+      if (event.key !== THEME_STORAGE_KEY) return;
+      setDarkMode(event.newValue === 'true');
+    };
+
+    window.addEventListener('storage', syncTheme);
+    return () => window.removeEventListener('storage', syncTheme);
+  }, []);
+
+  const toggleDarkMode = useCallback(() => {
+    setDarkMode((current) => !current);
+  }, []);
+
+  const value = useMemo(
+    () => ({ darkMode, toggleDarkMode }),
+    [darkMode, toggleDarkMode]
+  );
 
   return (
-    <ThemeContext.Provider value={{ darkMode, toggleDarkMode }}>
+    <ThemeContext.Provider value={value}>
       {children}
     </ThemeContext.Provider>
   );
