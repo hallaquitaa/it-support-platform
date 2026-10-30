@@ -228,25 +228,18 @@ export class VaultCredential {
       throw new Error('Master Password incorrecta');
     }
 
-    // Preserve the previous encrypted version before applying any changes.
-    await db.run(
-      `INSERT INTO vault_credential_history
-        (credential_id, service_name, url, username, encrypted_password,
-         encrypted_notes, category, tags, changed_by, change_reason)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        current.id,
-        current.service_name,
-        current.url,
-        current.username,
-        current.encrypted_password,
-        current.encrypted_notes,
-        current.category,
-        null,
-        changedBy,
-        data.change_reason ? String(data.change_reason).slice(0, 500) : null,
-      ]
-    );
+    // Validate and encrypt all incoming values before opening a transaction.
+    const expiresAt = Object.prototype.hasOwnProperty.call(data, 'expires_at')
+      ? validExpiry(data.expires_at)
+      : undefined;
+    const encryptedPassword = data.password
+      ? JSON.stringify(await encrypt(data.password, masterPassword))
+      : undefined;
+    const encryptedNotes = Object.prototype.hasOwnProperty.call(data, 'notes')
+      ? data.notes
+        ? JSON.stringify(await encrypt(data.notes, masterPassword))
+        : null
+      : undefined;
 
     const fields = [];
     const values = [];
@@ -263,16 +256,13 @@ export class VaultCredential {
       fields.push('username = ?');
       values.push(String(data.username || '').trim());
     }
-    if (data.password) {
+    if (encryptedPassword !== undefined) {
       fields.push('encrypted_password = ?');
-      values.push(JSON.stringify(await encrypt(data.password, masterPassword)));
+      values.push(encryptedPassword);
     }
-    if (Object.prototype.hasOwnProperty.call(data, 'notes')) {
-      const encryptedNotes = data.notes
-        ? await encrypt(data.notes, masterPassword)
-        : null;
+    if (encryptedNotes !== undefined) {
       fields.push('encrypted_notes = ?');
-      values.push(encryptedNotes ? JSON.stringify(encryptedNotes) : null);
+      values.push(encryptedNotes);
     }
     if (Object.prototype.hasOwnProperty.call(data, 'category')) {
       fields.push('category = ?');
@@ -282,19 +272,48 @@ export class VaultCredential {
       fields.push('status = ?');
       values.push(data.status);
     }
-    if (Object.prototype.hasOwnProperty.call(data, 'expires_at')) {
+    if (expiresAt !== undefined) {
       fields.push('expires_at = ?');
-      values.push(validExpiry(data.expires_at));
+      values.push(expiresAt);
     }
 
     fields.push('last_updated = ?');
     values.push(new Date().toISOString());
     values.push(id);
 
-    await db.run(
-      `UPDATE vault_credentials SET ${fields.join(', ')} WHERE id = ?`,
-      values
-    );
+    await db.exec('BEGIN IMMEDIATE');
+    try {
+      // Keep the old encrypted version and the metadata changes atomic.
+      await db.run(
+        `INSERT INTO vault_credential_history
+          (credential_id, service_name, url, username, encrypted_password,
+           encrypted_notes, category, tags, changed_by, change_reason)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          current.id,
+          current.service_name,
+          current.url,
+          current.username,
+          current.encrypted_password,
+          current.encrypted_notes,
+          current.category,
+          null,
+          changedBy,
+          data.change_reason ? String(data.change_reason).slice(0, 500) : null,
+        ]
+      );
+
+      await db.run(
+        `UPDATE vault_credentials SET ${fields.join(', ')} WHERE id = ?`,
+        values
+      );
+      await db.exec('COMMIT');
+    } catch (error) {
+      try {
+        await db.exec('ROLLBACK');
+      } catch {}
+      throw error;
+    }
 
     return this.getById(id);
   }
