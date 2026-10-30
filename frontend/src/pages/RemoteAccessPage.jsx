@@ -325,9 +325,9 @@ export default function RemoteAccessPage() {
   const activeRecords = computers.filter((item) => item.status !== 'retired').length;
 
   return (
-    <main className="relative isolate min-h-[calc(100vh-64px)] overflow-hidden bg-[#f5f7fc] px-4 py-6 text-slate-900 dark:bg-[#080d18] dark:text-slate-100 sm:px-6 lg:px-8">
+    <main className="relative isolate aura-module-root min-h-[calc(100vh-64px)] overflow-hidden bg-[#f5f7fc] px-4 py-6 text-slate-900 dark:bg-[#080d18] dark:text-slate-100 sm:px-6 lg:px-8">
       <AuraPageBackground />
-      <div className="relative mx-auto max-w-[1600px] space-y-5">
+      <div className="aura-module-container relative mx-auto max-w-[1600px] space-y-5">
         <header className="flex flex-col justify-between gap-4 xl:flex-row xl:items-end">
           <div>
             <div className="mb-2 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-indigo-600 dark:text-indigo-300">
