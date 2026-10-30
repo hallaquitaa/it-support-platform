@@ -9,7 +9,7 @@ import {
   RefreshCw,
   Search,
   ShieldCheck,
-  UserRound,
+  User,
   Users,
   UserX,
   X,
@@ -198,7 +198,7 @@ export default function AdminPage() {
         <section aria-label="Resumen de usuarios" className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           {[
             { label: 'Usuarios registrados', value: users.length, icon: Users },
-            { label: 'Cuentas activas', value: activeCount, icon: UserRound },
+            { label: 'Cuentas activas', value: activeCount, icon: User },
             { label: 'Administradores activos', value: adminCount, icon: ShieldCheck },
           ].map((item) => {
             const Icon = item.icon;
