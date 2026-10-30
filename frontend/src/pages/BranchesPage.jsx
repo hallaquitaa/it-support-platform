@@ -99,9 +99,9 @@ export default function BranchesPage() {
   }
 
   return (
-    <div className="relative isolate min-h-[calc(100vh-64px)] overflow-hidden bg-[#f5f7fc] p-6 text-slate-900 dark:bg-[#080d18] dark:text-slate-100">
+    <div className="relative isolate aura-module-root min-h-[calc(100vh-64px)] overflow-hidden text-slate-900 dark:text-slate-100">
       <AuraPageBackground />
-      <div className="relative z-10">
+      <div className="aura-module-container relative z-10">
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <div>
@@ -127,19 +127,19 @@ export default function BranchesPage() {
       {/* Stats Cards */}
       {stats && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white dark:bg-slate-800 rounded-lg p-4 shadow-sm border border-slate-200 dark:border-slate-700">
+          <div className="aura-panel aura-glass rounded-xl p-3.5">
             <p className="text-2xl font-bold text-slate-800 dark:text-white">{stats.total}</p>
             <p className="text-sm text-slate-500 dark:text-slate-400">Total Sucursales</p>
           </div>
-          <div className="bg-white dark:bg-slate-800 rounded-lg p-4 shadow-sm border border-slate-200 dark:border-slate-700">
+          <div className="aura-panel aura-glass rounded-xl p-3.5">
             <p className="text-2xl font-bold text-green-600 dark:text-green-400">{stats.active}</p>
             <p className="text-sm text-slate-500 dark:text-slate-400">Activas</p>
           </div>
-          <div className="bg-white dark:bg-slate-800 rounded-lg p-4 shadow-sm border border-slate-200 dark:border-slate-700">
+          <div className="aura-panel aura-glass rounded-xl p-3.5">
             <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{stats.maintenance || 0}</p>
             <p className="text-sm text-slate-500 dark:text-slate-400">En Mantenimiento</p>
           </div>
-          <div className="bg-white dark:bg-slate-800 rounded-lg p-4 shadow-sm border border-slate-200 dark:border-slate-700">
+          <div className="aura-panel aura-glass rounded-xl p-3.5">
             <p className="text-2xl font-bold text-red-600 dark:text-red-400">{stats.closed || 0}</p>
             <p className="text-sm text-slate-500 dark:text-slate-400">Cerradas</p>
           </div>
@@ -161,7 +161,7 @@ export default function BranchesPage() {
       </div>
 
       {/* Branches Table */}
-      <div className="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+      <div className="aura-panel aura-glass rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-slate-50 dark:bg-slate-700 border-b border-slate-200 dark:border-slate-600">
