@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   Activity,
   Check,
-  CircleAlert,
+  AlertCircle,
   KeyRound,
   Plus,
   RefreshCw,
@@ -192,7 +192,7 @@ export default function AdminPage() {
           </div>
         </header>
 
-        {error && <div role="alert" className="flex items-start gap-2 rounded-xl border border-rose-500/20 bg-rose-500/[0.06] p-3 text-sm text-rose-700 dark:text-rose-300"><CircleAlert size={16} className="mt-0.5 shrink-0" />{error}</div>}
+        {error && <div role="alert" className="flex items-start gap-2 rounded-xl border border-rose-500/20 bg-rose-500/[0.06] p-3 text-sm text-rose-700 dark:text-rose-300"><AlertCircle size={16} className="mt-0.5 shrink-0" />{error}</div>}
         {notice && <div role="status" className="flex items-start gap-2 rounded-xl border border-emerald-500/20 bg-emerald-500/[0.06] p-3 text-sm text-emerald-700 dark:text-emerald-300"><Check size={16} className="mt-0.5 shrink-0" />{notice}</div>}
 
         <section aria-label="Resumen de usuarios" className="grid grid-cols-1 gap-3 sm:grid-cols-3">
