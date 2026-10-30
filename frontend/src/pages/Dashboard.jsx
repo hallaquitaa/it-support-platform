@@ -15,6 +15,7 @@ import {
   Sun,
   Wifi,
   Command,
+  ShieldCheck,
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import taskService from '../services/taskService';
@@ -108,10 +109,25 @@ export default function Dashboard() {
   }, [openTasks]);
 
   const visibleModules = useMemo(() => {
+    const availableModules = user?.role === 'admin'
+      ? [
+          ...modules,
+          {
+            name: 'Administración',
+            number: '09',
+            label: 'CONTROL DE ACCESO',
+            description: 'Usuarios, roles, estados de cuenta y actividad administrativa.',
+            path: '/admin',
+            icon: ShieldCheck,
+            tone: 'indigo',
+            layout: 'xl:col-span-3 min-h-[190px]',
+          },
+        ]
+      : modules;
     const query = search.trim().toLocaleLowerCase();
-    if (!query) return modules;
-    return modules.filter((module) => `${module.name} ${module.label} ${module.description}`.toLocaleLowerCase().includes(query));
-  }, [search]);
+    if (!query) return availableModules;
+    return availableModules.filter((module) => `${module.name} ${module.label} ${module.description}`.toLocaleLowerCase().includes(query));
+  }, [search, user?.role]);
 
   if (loading) {
     return <div className="flex min-h-screen items-center justify-center bg-slate-50 text-slate-500 dark:bg-[#0b0d12] dark:text-slate-400"><span className="font-mono text-xs tracking-[0.18em]">INICIANDO IT SUPPORT PLATFORM...</span></div>;
