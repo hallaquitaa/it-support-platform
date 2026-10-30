@@ -137,10 +137,10 @@ export default function ProfilePage() {
     'text-xs font-medium text-slate-600 dark:text-slate-300';
 
   return (
-    <div className="relative isolate min-h-screen overflow-hidden bg-[#f5f7fc] text-slate-900 dark:bg-[#080d18] dark:text-slate-100">
+    <div className="relative isolate aura-module-root min-h-screen overflow-hidden bg-[#f5f7fc] text-slate-900 dark:bg-[#080d18] dark:text-slate-100">
       <AuraPageBackground />
 
-      <main className="relative z-10 mx-auto max-w-5xl px-4 py-6 sm:px-6 lg:py-8">
+      <main className="aura-module-container relative z-10 mx-auto max-w-5xl px-4 py-6 sm:px-6 lg:py-8">
         {/* Regresar al Centro de Mando */}
         <button
           type="button"
