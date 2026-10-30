@@ -203,7 +203,7 @@ export default function MaintenancePage() {
 
         <section className="mb-5 grid gap-3 sm:grid-cols-3">
           {statCards.map(({ label, value, icon: Icon, detail, tint }) => (
-            <article key={label} className={`relative overflow-hidden rounded-2xl border p-4 shadow-lg backdrop-blur-xl transition-all duration-200 hover:-translate-y-0.5 ${surface(darkMode)}`}>
+            <article key={label} className={`relative overflow-hidden rounded-2xl border p-4 shadow-lg transition-all duration-200 hover:-translate-y-0.5 ${surface(darkMode)}`}>
               <div className="flex items-start justify-between gap-3">
                 <div><p className={`text-xs font-medium ${mutedText(darkMode)}`}>{label}</p><p className="mt-2 text-2xl font-bold tracking-tight">{value}</p><p className={`mt-1 text-[10px] ${mutedText(darkMode)}`}>{detail}</p></div>
                 <span className={`flex h-9 w-9 items-center justify-center rounded-xl border ${darkMode ? 'border-gray-700 bg-gray-900/70' : 'border-gray-200 bg-white/80'} ${tint}`}><Icon size={17}/></span>
@@ -213,7 +213,7 @@ export default function MaintenancePage() {
           ))}
         </section>
 
-        <section className={`overflow-hidden rounded-2xl border shadow-xl shadow-gray-900/[0.03] backdrop-blur-xl ${surface(darkMode)}`}>
+        <section className={`overflow-hidden rounded-2xl border shadow-xl shadow-gray-900/[0.03] ${surface(darkMode)}`}>
           <div className={`flex flex-col gap-3 border-b p-4 sm:flex-row sm:items-center sm:justify-between ${darkMode ? 'border-gray-800/90' : 'border-gray-200/80'}`}>
             <div className={`inline-flex w-fit items-center gap-1 rounded-xl border p-1 ${darkMode ? 'border-gray-800 bg-[#0A101D]/80' : 'border-gray-200 bg-gray-100/75'}`}>
               <button type="button" onClick={() => setTab('schedule')} className={`inline-flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold transition-all ${tab === 'schedule' ? (darkMode ? 'bg-indigo-500/15 text-indigo-200 shadow-sm' : 'bg-white text-indigo-700 shadow-sm') : mutedText(darkMode)}`}><Calendar size={14}/> Programación <span className={`rounded-md px-1.5 py-0.5 text-[10px] ${tab === 'schedule' ? 'bg-indigo-500/10' : ''}`}>{items.length}</span></button>
