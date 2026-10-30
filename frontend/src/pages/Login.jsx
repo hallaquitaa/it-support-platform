@@ -37,7 +37,6 @@ export default function Login() {
         <section className="relative hidden flex-col justify-between overflow-hidden border-r border-slate-200/80 bg-slate-50 p-10 dark:border-white/[0.07] dark:bg-[#0A101D] lg:flex xl:p-12">
           <div aria-hidden="true" className="pointer-events-none absolute -right-28 top-20 h-80 w-80 rounded-full border border-blue-500/15" />
           <div aria-hidden="true" className="pointer-events-none absolute -right-12 top-36 h-48 w-48 rounded-full border border-violet-500/15" />
-          <div aria-hidden="true" className="pointer-events-none absolute bottom-20 left-12 h-44 w-44 rounded-full bg-blue-500/[0.08] blur-3xl" />
           <div className="relative z-10">
             <HallITLogo darkMode={darkMode} showSlogan />
             <div className="mb-4 mt-16 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[.24em] text-blue-600 dark:text-blue-400">
