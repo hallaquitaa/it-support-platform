@@ -12,9 +12,7 @@ import snippetService from '../services/snippetService';
 const emptyForm = { title: '', content: '', language: 'sql', category_id: '' };
 const languages = ['sql', 'powershell', 'bash', 'python', 'javascript', 'typescript', 'json', 'yaml', 'text', 'cisco', 'mikrotik'];
 
-const surface = (darkMode) => darkMode
-  ? 'border-white/[0.08] bg-[#111827]/[0.78] shadow-black/20'
-  : 'border-slate-200/70 bg-white/[0.76] shadow-slate-300/10';
+const surface = () => 'aura-panel';
 
 const mutedText = (darkMode) => darkMode ? 'text-gray-400' : 'text-gray-500';
 
