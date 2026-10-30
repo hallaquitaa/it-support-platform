@@ -17,6 +17,10 @@ import {
   Command,
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import taskService from '../services/taskService';
+import hardwareService from '../services/hardwareService';
+import api from '../services/api';
+import AuraPageBackground from '../components/common/AuraPageBackground';
 import { useTheme } from '../contexts/ThemeContext';
 
 const modules = [
@@ -43,10 +47,65 @@ export default function Dashboard() {
   const { darkMode, toggleDarkMode } = useTheme();
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
+  const [overview, setOverview] = useState({
+    tasks: [],
+    assets: [],
+    remoteDevices: [],
+    loading: true,
+  });
+
+  useEffect(() => {
+    let active = true;
+
+    const loadOverview = async () => {
+      const [tasksResult, assetsResult, remoteResult] = await Promise.allSettled([
+        taskService.getAll(),
+        hardwareService.getAll(),
+        api.get('/remote-access').then((response) => response.data),
+      ]);
+
+      if (!active) return;
+
+      const asList = (result) =>
+        result.status === 'fulfilled' && Array.isArray(result.value)
+          ? result.value
+          : [];
+
+      setOverview({
+        tasks: asList(tasksResult),
+        assets: asList(assetsResult),
+        remoteDevices: asList(remoteResult),
+        loading: false,
+      });
+    };
+
+    loadOverview();
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (!loading && !user) navigate('/login', { replace: true });
   }, [user, loading, navigate]);
+
+  const openTasks = useMemo(
+    () => overview.tasks.filter((task) => !task.completed && task.status !== 'resolved'),
+    [overview.tasks]
+  );
+
+  const overdueTasks = useMemo(() => {
+    const now = Date.now();
+    return openTasks.filter((task) => {
+      if (!task.due_date) return false;
+      const date = String(task.due_date).slice(0, 10);
+      const timeValue = String(task.due_time || task.hour || '23:59');
+      const time = timeValue.length === 5 ? `${timeValue}:00` : timeValue;
+      const dueAt = new Date(`${date}T${time}`).getTime();
+      return Number.isFinite(dueAt) && dueAt < now;
+    });
+  }, [openTasks]);
 
   const visibleModules = useMemo(() => {
     const query = search.trim().toLocaleLowerCase();
@@ -63,10 +122,8 @@ export default function Dashboard() {
   const initial = String(displayName).trim().charAt(0).toUpperCase() || 'A';
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#f4f6fb] text-slate-800 transition-colors duration-300 dark:bg-[#0b0d12] dark:text-slate-100">
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0 opacity-60 dark:opacity-30" style={{ backgroundImage: 'linear-gradient(rgba(99,102,241,0.035) 1px, transparent 1px), linear-gradient(90deg, rgba(99,102,241,0.035) 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
-      <div aria-hidden="true" className="pointer-events-none absolute -right-40 -top-44 h-[520px] w-[520px] rounded-full bg-indigo-300/15 blur-3xl dark:bg-indigo-500/[0.08]" />
-      <div aria-hidden="true" className="pointer-events-none absolute -bottom-48 -left-40 h-[460px] w-[460px] rounded-full bg-cyan-300/10 blur-3xl dark:bg-cyan-500/[0.05]" />
+    <div className="relative isolate min-h-screen overflow-hidden bg-[#f4f6fb] text-slate-800 transition-colors duration-300 dark:bg-[#0b0d12] dark:text-slate-100">
+      <AuraPageBackground />
 
       <header className="sticky top-0 z-20 border-b border-slate-200/80 bg-white/85 backdrop-blur-xl dark:border-white/[0.08] dark:bg-[#0d1017]/90">
         <div className="mx-auto flex max-w-[1600px] items-center justify-between gap-4 px-4 py-2 sm:px-6 lg:px-8">
@@ -86,6 +143,49 @@ export default function Dashboard() {
         <section className="mb-4 flex flex-col justify-between gap-3 sm:mb-4 sm:flex-row sm:items-end">
           <div><div className="mb-1.5 flex items-center gap-2"><span className="h-1.5 w-1.5 rounded-full bg-indigo-500 shadow-[0_0_0_4px_rgba(99,102,241,0.10)]" /><p className="font-mono text-[10px] font-semibold tracking-[0.2em] text-indigo-600 dark:text-indigo-300">ACCESO A HERRAMIENTAS</p></div><h1 className="text-2xl font-semibold tracking-[-0.04em] text-slate-900 dark:text-white sm:text-[30px]">Módulos de trabajo<span className="text-indigo-500">.</span></h1><p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Cada herramienta, a un paso de distancia.</p></div>
           <label className="flex h-9 w-full items-center gap-2.5 rounded-xl border border-slate-200 bg-white/90 px-3.5 text-slate-400 shadow-sm transition focus-within:border-indigo-300 focus-within:ring-2 focus-within:ring-indigo-500/10 dark:border-white/10 dark:bg-white/[0.035] dark:focus-within:border-indigo-400/40 sm:w-[260px]"><Search size={16} /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar módulo..." aria-label="Buscar módulo" className="min-w-0 flex-1 bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400 dark:text-slate-200 dark:placeholder:text-slate-500" /></label>
+        </section>
+
+        <section aria-label="Resumen operativo" className="mb-4 grid grid-cols-2 gap-3 xl:grid-cols-4">
+          {[
+            {
+              label: 'Tareas abiertas',
+              value: overview.loading ? '—' : openTasks.length,
+              detail: 'Pendientes o en curso',
+              icon: CheckSquare,
+            },
+            {
+              label: 'Fuera de plazo',
+              value: overview.loading ? '—' : overdueTasks.length,
+              detail: 'Requieren seguimiento',
+              icon: CalendarDays,
+            },
+            {
+              label: 'Activos registrados',
+              value: overview.loading ? '—' : overview.assets.length,
+              detail: 'Equipos en inventario',
+              icon: Server,
+            },
+            {
+              label: 'Equipos remotos',
+              value: overview.loading ? '—' : overview.remoteDevices.length,
+              detail: 'Registros AnyDesk',
+              icon: Wifi,
+            },
+          ].map((item) => {
+            const Icon = item.icon;
+            return (
+              <article key={item.label} className="aura-panel rounded-xl p-3.5 sm:p-4">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">{item.label}</p>
+                  <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-indigo-500/15 bg-indigo-500/[0.06] text-indigo-500 dark:text-indigo-300">
+                    <Icon size={16} />
+                  </span>
+                </div>
+                <p className="mt-2 text-2xl font-semibold tracking-tight text-slate-900 dark:text-white tabular-nums">{item.value}</p>
+                <p className="mt-1 text-[10px] text-slate-500 dark:text-slate-400">{item.detail}</p>
+              </article>
+            );
+          })}
         </section>
 
         <section aria-label="Módulos de la plataforma" className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-12 xl:gap-3">
