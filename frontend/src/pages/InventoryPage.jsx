@@ -81,15 +81,15 @@ function StatCard({ label, value, detail, icon: Icon, accent = 'indigo' }) {
     amber: 'bg-amber-500/10 text-amber-400 border-amber-500/15',
     rose: 'bg-rose-500/10 text-rose-400 border-rose-500/15',
   };
-  return <div className="group min-w-0 rounded-xl border border-slate-200/70 bg-white/[0.76] p-4 shadow-sm backdrop-blur-xl transition duration-200 hover:-translate-y-0.5 hover:border-indigo-500/25 hover:shadow-md dark:border-white/[0.08] dark:bg-[#111827]/[0.78] dark:shadow-black/20 dark:hover:shadow-indigo-950/20">
+  return <div className="group min-w-0 rounded-xl border border-slate-200/70 bg-white/[0.9] p-4 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-indigo-500/25 hover:shadow-md dark:border-white/[0.08] dark:bg-[#111827]/[0.92] dark:shadow-black/20 dark:hover:shadow-indigo-950/20">
     <div className="flex items-start justify-between gap-3"><div className="min-w-0"><p className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500 dark:text-slate-500">{label}</p><p className="mt-2 text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">{value}</p></div><span className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border', accents[accent] || accents.emerald)}><Icon size={17} strokeWidth={1.8} /></span></div>
     {detail && <p className="mt-2 truncate text-xs text-slate-500 dark:text-slate-400">{detail}</p>}
   </div>;
 }
 
 function ModalShell({ title, subtitle, icon: Icon = Package, onClose, children, size = 'max-w-2xl' }) {
-  return <div className="fixed inset-0 z-[90] flex items-center justify-center overflow-y-auto bg-slate-950/20 p-3 backdrop-blur-xl sm:p-6" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
-    <section role="dialog" aria-modal="true" className={cn('my-auto w-full overflow-hidden rounded-2xl border shadow-2xl backdrop-blur-xl bg-white/96 border-slate-200 shadow-slate-300/30 dark:border-white/[0.09] dark:bg-[#111827]/98 dark:shadow-black/40', size)}>
+  return <div className="fixed inset-0 z-[90] flex items-center justify-center overflow-y-auto bg-slate-950/25 p-3 backdrop-blur-sm sm:p-6" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
+    <section role="dialog" aria-modal="true" className={cn('my-auto w-full overflow-hidden rounded-2xl border shadow-2xl bg-white/96 border-slate-200 shadow-slate-300/30 dark:border-white/[0.09] dark:bg-[#111827]/98 dark:shadow-black/40', size)}>
       <header className="flex items-start justify-between gap-4 border-b border-slate-200/80 px-5 py-4 dark:border-white/[0.07] sm:px-6"><div className="flex min-w-0 items-center gap-3"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-indigo-500/20 bg-indigo-500/10 text-indigo-600 dark:text-indigo-300"><Icon size={19} /></span><div className="min-w-0"><h2 className="truncate text-base font-semibold text-slate-900 dark:text-white">{title}</h2>{subtitle && <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{subtitle}</p>}</div></div><button type="button" onClick={onClose} aria-label="Cerrar" className="rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-white/[0.07] dark:hover:text-white"><X size={18} /></button></header>
       {children}
     </section>
