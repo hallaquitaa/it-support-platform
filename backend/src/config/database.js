@@ -168,6 +168,7 @@ export async function initDb() {
       favorite BOOLEAN DEFAULT 0,
       usage_count INTEGER DEFAULT 0,
       last_used TIMESTAMP,
+      expires_at DATE,
       FOREIGN KEY (created_by) REFERENCES users(id)
     )
   `);
@@ -484,6 +485,15 @@ export async function initDb() {
     `);
 
     console.log('✅ Columna last_used agregada');
+  }
+
+  if (!columns.includes('expires_at')) {
+    await db.exec(`
+      ALTER TABLE vault_credentials
+      ADD COLUMN expires_at DATE
+    `);
+
+    console.log('✅ Columna expires_at agregada');
   }
 
   console.log(
