@@ -3,8 +3,31 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    color-scheme: light;
+    --aura-background: #f5f7fc;
+    --aura-surface: rgba(255, 255, 255, 0.78);
+    --aura-border: rgba(148, 163, 184, 0.28);
+    --aura-shadow: 0 12px 32px rgba(38, 55, 95, 0.055);
+    --aura-accent: #6574d9;
+    --aura-blue-glow: rgba(59, 130, 246, 0.16);
+    --aura-violet-glow: rgba(139, 92, 246, 0.13);
+  }
+
+  .dark {
+    color-scheme: dark;
+    --aura-background: #080d18;
+    --aura-surface: rgba(17, 24, 39, 0.78);
+    --aura-border: rgba(255, 255, 255, 0.085);
+    --aura-shadow: 0 16px 40px rgba(0, 0, 0, 0.22);
+    --aura-accent: #8995f2;
+    --aura-blue-glow: rgba(59, 130, 246, 0.19);
+    --aura-violet-glow: rgba(139, 92, 246, 0.16);
+  }
+
   body {
-    @apply bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 transition-colors duration-200;
+    @apply bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100;
+    transition: background-color 180ms ease, color 180ms ease;
   }
 
   ::-webkit-scrollbar {
@@ -23,7 +46,8 @@
 
 @layer components {
   .card {
-    @apply bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 transition-all duration-200;
+    @apply bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700;
+    transition: background-color 180ms ease, border-color 180ms ease, color 180ms ease, box-shadow 180ms ease;
   }
 
   .card-hover {
@@ -31,38 +55,84 @@
   }
 
   .input {
-    @apply w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:focus:ring-indigo-400 transition-colors duration-200;
+    @apply w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:focus:ring-indigo-400;
+    transition: background-color 180ms ease, border-color 180ms ease, color 180ms ease, box-shadow 180ms ease;
   }
 
   .btn-primary {
-    @apply bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed;
+    transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
   }
 
   .btn-secondary {
-    @apply border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 px-4 py-2 rounded-lg transition-all duration-200;
+    @apply border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 px-4 py-2 rounded-lg;
+    transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
   }
+
+  /* Base visual compartida. El desenfoque se reserva para superficies principales. */
+  .aura-panel {
+    border: 1px solid var(--aura-border);
+    background: var(--aura-surface);
+    box-shadow: var(--aura-shadow);
+  }
+
+  .aura-glass {
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+  }
+}
+
+.aura-background {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+  background-color: var(--aura-background);
+  isolation: isolate;
+  contain: paint;
+}
+
+.aura-background__orb {
+  position: absolute;
+  width: clamp(17rem, 34vw, 29rem);
+  aspect-ratio: 1;
+  border-radius: 9999px;
+  contain: paint;
+}
+
+.aura-background__orb--blue {
+  top: -12rem;
+  right: -11rem;
+  background: radial-gradient(circle, var(--aura-blue-glow) 0%, rgba(59, 130, 246, 0.045) 42%, transparent 72%);
+  animation: auraOrbBlue 30s ease-in-out infinite alternate;
+}
+
+.aura-background__orb--violet {
+  bottom: -14rem;
+  left: -12rem;
+  background: radial-gradient(circle, var(--aura-violet-glow) 0%, rgba(139, 92, 246, 0.04) 44%, transparent 72%);
+  animation: auraOrbViolet 34s ease-in-out infinite alternate;
+}
+
+.aura-background__grid {
+  position: absolute;
+  inset: 0;
+  opacity: 0.038;
+  background-image:
+    linear-gradient(rgba(100, 116, 139, 0.7) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(100, 116, 139, 0.7) 1px, transparent 1px);
+  background-size: 42px 42px;
 }
 
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-100%);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(-100%); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .animate-fade-in {
@@ -73,7 +143,6 @@
   animation: slideDown 0.4s ease-out forwards;
 }
 
-/* Transición suave para hover en tarjetas */
 .hover-scale {
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
@@ -83,46 +152,6 @@
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
 }
 
-@layer base {
-  :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-  }
-  
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-  }
-}
-
-/* Transiciones suaves para el modo oscuro */
-* {
-  transition-property: background-color, border-color, color, fill, stroke;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-duration: 200ms;
-}
-
-/* Scrollbar personalizada para modo oscuro */
-.dark ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-.dark ::-webkit-scrollbar-track {
-  background: #1f2937;
-  border-radius: 4px;
-}
-
-.dark ::-webkit-scrollbar-thumb {
-  background: #4b5563;
-  border-radius: 4px;
-}
-
-.dark ::-webkit-scrollbar-thumb:hover {
-  background: #6b7280;
-}
-
-/* AURA surfaces and gentle ambient motion shared by maintenance/snippets dialogs. */
 @keyframes auraOverlayIn {
   from { opacity: 0; }
   to { opacity: 1; }
@@ -134,11 +163,31 @@
 }
 
 @keyframes auraOrbBlue {
-  0% { transform: translate3d(0, 0, 0) scale(1); }
-  100% { transform: translate3d(-24px, 18px, 0) scale(1.08); }
+  0% { transform: translate3d(0, 0, 0); }
+  100% { transform: translate3d(-18px, 14px, 0); }
 }
 
 @keyframes auraOrbViolet {
-  0% { transform: translate3d(0, 0, 0) scale(1); }
-  100% { transform: translate3d(22px, -20px, 0) scale(1.06); }
+  0% { transform: translate3d(0, 0, 0); }
+  100% { transform: translate3d(16px, -18px, 0); }
 }
+
+@media (max-width: 767px) {
+  .aura-background__orb--blue,
+  .aura-background__orb--violet {
+    animation: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Transitions are deliberately scoped to components; avoid a universal * transition. */
