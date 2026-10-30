@@ -36,8 +36,8 @@ export default function Navbar() {
       <nav
         className={`hidden md:block sticky top-0 z-[100] border-b transition-all duration-500 ease-out ${
           darkMode
-            ? 'bg-slate-900 border-slate-700/80'
-            : 'bg-white border-slate-200/90'
+            ? 'bg-slate-900/90 border-slate-700/80 backdrop-blur-xl'
+            : 'bg-white/90 border-slate-200/90 backdrop-blur-xl'
         } `}
       >
         <div className="px-5 py-2">
@@ -125,8 +125,8 @@ export default function Navbar() {
       <nav
         className={`md:hidden sticky top-0 z-[100] border-b transition-all duration-500 ease-out ${
           darkMode
-            ? 'bg-slate-900 border-slate-700/80'
-            : 'bg-white border-slate-200/90'
+            ? 'bg-slate-900/90 border-slate-700/80 backdrop-blur-xl'
+            : 'bg-white/90 border-slate-200/90 backdrop-blur-xl'
         } `}
       >
         <div className="px-4 py-3 flex items-center justify-between animate-[navbarContentIn_420ms_cubic-bezier(.16,1,.3,1)]">
