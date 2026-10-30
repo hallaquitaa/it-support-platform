@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Plus, Building2, Edit, Trash2, Search, X, Check } from 'lucide-react';
 import branchService from '../services/branchService';
+import AuraPageBackground from '../components/common/AuraPageBackground';
 
 export default function BranchesPage() {
   const [branches, setBranches] = useState([]);
@@ -98,7 +99,9 @@ export default function BranchesPage() {
   }
 
   return (
-    <div className="p-6">
+    <div className="relative isolate min-h-[calc(100vh-64px)] overflow-hidden bg-[#f5f7fc] p-6 text-slate-900 dark:bg-[#080d18] dark:text-slate-100">
+      <AuraPageBackground />
+      <div className="relative z-10">
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <div>
@@ -306,6 +309,7 @@ export default function BranchesPage() {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }
