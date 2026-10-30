@@ -47,8 +47,8 @@ export const revealCredential = async (req, res) => {
     const revealed = await VaultCredential.revealPassword(id, masterPassword);
     res.json(revealed);
   } catch (error) {
-    if (error.message.includes('bad decrypt') || error.message.includes('EVP_DecryptFinal_ex')) {
-      res.status(401).json({ error: 'Master Password incorrecto' });
+    if (error.message === 'Master Password incorrecta') {
+      res.status(401).json({ error: error.message });
     } else {
       res.status(500).json({ error: error.message });
     }
@@ -71,6 +71,46 @@ export const updateCredential = async (req, res) => {
     } else {
       res.status(500).json({ error: error.message });
     }
+  }
+};
+
+export const revealCredentialHistoryVersion = async (req, res) => {
+  const masterPassword = String(req.body?.masterPassword || '');
+  if (!masterPassword) {
+    return res.status(400).json({ error: 'Se requiere Master Password.' });
+  }
+
+  try {
+    const result = await VaultCredential.revealHistoryVersion(
+      req.params.id,
+      req.params.historyId,
+      masterPassword
+    );
+
+    const db = await openDb();
+    await db.run(
+      `INSERT INTO vault_access_logs
+        (credential_id, user_id, action, ip_address, user_agent)
+       VALUES (?, ?, ?, ?, ?)`,
+      [
+        req.params.id,
+        req.user.id,
+        'history_revealed',
+        req.ip || null,
+        req.get('user-agent') || null,
+      ]
+    );
+
+    return res.json(result);
+  } catch (error) {
+    if (error.message === 'Master Password incorrecta') {
+      return res.status(401).json({ error: error.message });
+    }
+    if (error.message === 'Versión histórica no encontrada') {
+      return res.status(404).json({ error: error.message });
+    }
+    console.error('Error revelando versión histórica de Vault:', error);
+    return res.status(500).json({ error: 'No se pudo revelar la versión histórica.' });
   }
 };
 
