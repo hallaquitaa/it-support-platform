@@ -219,7 +219,8 @@ export const revealMultiple = async (req, res) => {
     for (const id of ids) {
       try {
         const revealed = await VaultCredential.revealPassword(id, masterPassword);
-        results.push(revealed);
+        // Bulk PDF export only requires the password; never send encrypted/decrypted notes.
+        results.push({ id: Number(id), password: revealed.password });
       } catch (err) {
         console.error(`Error descifrando credencial ${id}:`, err);
         results.push({ id, error: 'Error al descifrar', service_name: 'Error' });
